@@ -187,13 +187,26 @@ if (window.AudioContext || window.webkitAudioContext) (function () {
 		/// check whether the note exists
 		if (!MIDI.channels[channel]) return;
 		var instrument = MIDI.channels[channel].instrument;
-		if (!audioBuffers[instrument + "" + note]) return;
+		/// fall back to nearest-neighbor sample with pitch-shift when target is missing
+		var bufferKey = instrument + "" + note;
+		var playbackRate = 1;
+		if (!audioBuffers[bufferKey]) {
+			var nearest = null;
+			for (var d = 1; d < 128; d++) {
+				if (audioBuffers[instrument + "" + (note + d)]) { nearest = note + d; break; }
+				if (audioBuffers[instrument + "" + (note - d)]) { nearest = note - d; break; }
+			}
+			if (nearest === null) return;
+			bufferKey = instrument + "" + nearest;
+			playbackRate = Math.pow(2, (note - nearest) / 12);
+		}
 		/// convert relative delay to absolute delay
 		if (delay < ctx.currentTime) delay += ctx.currentTime;
 		/// crate audio buffer
 		var source = ctx.createBufferSource();
 		sources[channel + "" + note] = source;
-		source.buffer = audioBuffers[instrument + "" + note];
+		source.buffer = audioBuffers[bufferKey];
+		if (playbackRate !== 1) source.playbackRate.value = playbackRate;
 		source.connect(ctx.destination);
 		///
 		if (ctx.createGain) { // firefox
