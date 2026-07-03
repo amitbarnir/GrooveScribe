@@ -3397,6 +3397,10 @@ function GrooveWriter() {
 		// load the groove from the URL data if it was passed in.
 		set_Default_notes(window.location.search);
 
+		// show tom rows by default
+		if (!isTomsVisible())
+			root.showHideToms(true, true, true);
+
 		root.myGrooveUtils.midiEventCallbacks.loadMidiDataEvent = function (myroot, playStarting) {
 			var midiURL;
 
