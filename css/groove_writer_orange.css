@@ -1007,6 +1007,16 @@
 	.library-leaf-delete:hover {
 		color: #c00;
 	}
+	.library-leaf-placeholder {
+		color: #888;
+		font-style: italic;
+	}
+	.library-leaf-hint {
+		font-size: 10px;
+		color: #aaa;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
 	#saveToLibraryButton {
 		display: inline-block;
 		margin-left: 12px;

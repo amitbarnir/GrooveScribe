@@ -4,7 +4,8 @@
 // implementation (e.g. File System Access API) without touching the UI.
 //
 // Data model: `library[author]` is a tree.
-//   - leaf  = string (the "?..." query)
+//   - leaf  = string (the "?..." query) — saved entry
+//   - leaf  = null                        — placeholder / unsaved slot
 //   - folder = object of {childName: subtree, ...}
 // Example:
 //   {
@@ -111,8 +112,6 @@ var GrooveLibrary = (function () {
 		{ author: "Mini Monster", path: ["Page 7", "Beat 12"], query: "?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C-OO-O--O-OO-O--O%7C&K=%7Co-----o-o-----o-%7C&Title=Mini+Monster+Page+7+Beat+12&Author=Joel+Rothman" },
 		{ author: "Mini Monster", path: ["Page 7", "Beat 13"], query: "?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C-OO-OO-O-OO-OO-O%7C&K=%7Co-----o-o-----o-%7C&Title=Mini+Monster+Page+7+Beat+13&Author=Joel+Rothman" },
 		{ author: "Mini Monster", path: ["Page 7", "Beat 15"], query: "?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C-O-OO--O-O-OO--O%7C&K=%7Co-o---o-o-o---o-%7C&Title=Mini+Monster+Page+7+Beat+15&Author=Joel+Rothman" },
-		{ author: "Mini Monster", path: ["Page 8", "Beat"], query: "?TimeSig=4%2F4&Div=16&Tempo=92&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Coo-o----oo-o----%7C&T1=%7C----------------%7C&T4=%7C----------------%7C&Title=Mini+Monster+Page+8+Beat&Author=Joel+Rothman" },
-		{ author: "Mini Monster", path: ["Page 8", "Groove Scribe"], query: "?TimeSig=4%2F4&Div=16&Tempo=65&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Coo-o---ooo-o---o%7C&T1=%7C----------------%7C&T4=%7C----------------%7C&Title=Mini+Monster+Page+8+Groove+Scribe&Author=Joel+Rothman" },
 		{ author: "Mini Monster", path: ["Page 8", "Beat 1"], query: "?TimeSig=4%2F4&Div=16&Tempo=40&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Co----o--o-------%7C&Title=Mini+Monster+Page+8+Beat+1&Author=Joel+Rothman" },
 		{ author: "Mini Monster", path: ["Page 8", "Beat 2"], query: "?TimeSig=4%2F4&Div=16&Tempo=40&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Co------oo-------%7C&Title=Mini+Monster+Page+8+Beat+2&Author=Joel+Rothman" },
 		{ author: "Mini Monster", path: ["Page 8", "Beat 3"], query: "?TimeSig=4%2F4&Div=16&Tempo=99&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Co----o-oo-------%7C&Title=Mini+Monster+Page+8+Beat+3&Author=Joel+Rothman" },
@@ -124,16 +123,15 @@ var GrooveLibrary = (function () {
 		{ author: "Mini Monster", path: ["Page 8", "Beat 11"], query: "?TimeSig=4%2F4&Div=16&Tempo=70&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Co--o-o--o--o-o--%7C&Title=Mini+Monster+Page+8+Beat+11&Author=Joel+Rothman" },
 		{ author: "Mini Monster", path: ["Page 8", "Beat 12"], query: "?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Co--o---oo--o---o%7C&Title=Mini+Monster+Page+8+Beat+12&Author=Joel+Rothman" },
 		{ author: "Mini Monster", path: ["Page 8", "Beat 13"], query: "?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Co--o-o-oo--o-o-o%7C&Title=Mini+Monster+Page+8+Beat+13&Author=Joel+Rothman" },
-		{ author: "Mini Monster", path: ["Page 8", "beat 15"], query: "?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Co-oo----o-oo----%7C&Title=Mini+Monster+Page+8+beat+15&Author=Joel+Rothman" },
+		{ author: "Mini Monster", path: ["Page 8", "Beat 15"], query: "?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Co-oo----o-oo----%7C&Title=Mini+Monster+Page+8+Beat+15&Author=Joel+Rothman" },
 		{ author: "Mini Monster", path: ["Page 8", "Beat 16"], query: "?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Co-oo--o-o-oo--o-%7C&Title=Mini+Monster+Page+8+Beat+16&Author=Joel+Rothman" },
 		{ author: "Mini Monster", path: ["Page 8", "Beat 17"], query: "?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Co-oo-o--o-oo-o--%7C&Title=Mini+Monster+Page+8+Beat+17&Author=Joel+Rothman" },
-		{ author: "Mini Monster", path: ["Page 8", "beat 17"], query: "?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Co-oo---oo-oo---o%7C&Title=Mini+Monster+Page+8+beat+17&Author=Joel+Rothman" },
-		{ author: "Mini Monster", path: ["Page 8", "beat 18"], query: "?TimeSig=4%2F4&Div=16&Tempo=55&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Co-oo---oo-oo---o%7C&Title=Mini+Monster+Page+8+beat+18&Author=Joel+Rothman" },
+		{ author: "Mini Monster", path: ["Page 8", "Beat 18"], query: "?TimeSig=4%2F4&Div=16&Tempo=55&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Co-oo---oo-oo---o%7C&Title=Mini+Monster+Page+8+Beat+18&Author=Joel+Rothman" },
 		{ author: "Mini Monster", path: ["Page 8", "Beat 19"], query: "?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Co-oo-o-oo-------%7C&Title=Mini+Monster+Page+8+Beat+19&Author=Joel+Rothman" },
 		{ author: "Mini Monster", path: ["Page 8", "Beat 21"], query: "?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Coo------oo------%7C&Title=Mini+Monster+Page+8+Beat+21&Author=Joel+Rothman" },
 		{ author: "Mini Monster", path: ["Page 8", "Beat 22"], query: "?TimeSig=4%2F4&Div=16&Tempo=70&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Coo----o-o-------%7C&Title=Mini+Monster+Page+8+Beat+22&Author=Joel+Rothman" },
 		{ author: "Mini Monster", path: ["Page 8", "Beat 23"], query: "?TimeSig=4%2F4&Div=16&Tempo=73&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Coo---o--o-------%7C&Title=Mini+Monster+Page+8+Beat+23&Author=Joel+Rothman" },
-		{ author: "Mini Monster", path: ["Page 8", "Bat 24"], query: "?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Coo-----oo-------%7C&Title=Mini+Monster+Page+8+Bat+24&Author=Joel+Rothman" },
+		{ author: "Mini Monster", path: ["Page 8", "Beat 24"], query: "?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Coo-----oo-------%7C&Title=Mini+Monster+Page+8+Beat+24&Author=Joel+Rothman" },
 		{ author: "Mini Monster", path: ["Page 8", "Beat 25"], query: "?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Coo---o-oo-------%7C&Title=Mini+Monster+Page+8+Beat+25&Author=Joel+Rothman" },
 		{ author: "Mini Monster", path: ["Page 8", "Beat 26"], query: "?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Coo---oo-o-------%7C&Title=Mini+Monster+Page+8+Beat+26&Author=Joel+Rothman" },
 		{ author: "Mini Monster", path: ["Page 8", "Beat 27"], query: "?TimeSig=4%2F4&Div=16&Tempo=70&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Coo-o----oo-o----%7C&T1=%7C----------------%7C&T4=%7C----------------%7C&Title=Mini+Monster+Page+8+Beat+27&Author=Joel+Rothman" },
@@ -174,11 +172,84 @@ var GrooveLibrary = (function () {
 		{ author: "Mini Monster", path: ["Page 10", "Beat 16"], query: "?TimeSig=4%2F4&Div=16&Tempo=70&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Co--o-o-----o-o-o%7C&Title=Mini+Monster+Page+10+Beat+16&Author=Joel+Rothman" },
 		{ author: "Mini Monster", path: ["Page 10", "Beat 17"], query: "?TimeSig=4%2F4&Div=16&Tempo=70&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Co--o-o--oo-----o%7C&Title=Mini+Monster+Page+10+Beat+17&Author=Joel+Rothman" },
 		{ author: "Mini Monster", path: ["Page 10", "Beat 18"], query: "?TimeSig=4%2F4&Div=16&Tempo=70&Measures=1&H=%7Cx-x-x-x-x-x-x-x-%7C&S=%7C----O-------O---%7C&K=%7Co--o-o--oo-o---o%7C&Title=Mini+Monster+Page+10+Beat+18&Author=Joel+Rothman" },
+		{ author: "Mini Monster", path: ["Page 6", "Beat 2"], query: null },
+		{ author: "Mini Monster", path: ["Page 6", "Beat 3"], query: null },
+		{ author: "Mini Monster", path: ["Page 6", "Beat 4"], query: null },
+		{ author: "Mini Monster", path: ["Page 6", "Beat 5"], query: null },
+		{ author: "Mini Monster", path: ["Page 6", "Beat 8"], query: null },
+		{ author: "Mini Monster", path: ["Page 6", "Beat 9"], query: null },
+		{ author: "Mini Monster", path: ["Page 6", "Beat 10"], query: null },
+		{ author: "Mini Monster", path: ["Page 6", "Beat 11"], query: null },
+		{ author: "Mini Monster", path: ["Page 6", "Beat 12"], query: null },
+		{ author: "Mini Monster", path: ["Page 6", "Beat 13"], query: null },
+		{ author: "Mini Monster", path: ["Page 6", "Beat 14"], query: null },
+		{ author: "Mini Monster", path: ["Page 6", "Beat 15"], query: null },
+		{ author: "Mini Monster", path: ["Page 6", "Beat 16"], query: null },
+		{ author: "Mini Monster", path: ["Page 6", "Beat 17"], query: null },
+		{ author: "Mini Monster", path: ["Page 6", "Beat 18"], query: null },
+		{ author: "Mini Monster", path: ["Page 7", "Beat 1"], query: null },
+		{ author: "Mini Monster", path: ["Page 7", "Beat 2"], query: null },
+		{ author: "Mini Monster", path: ["Page 7", "Beat 3"], query: null },
+		{ author: "Mini Monster", path: ["Page 7", "Beat 4"], query: null },
+		{ author: "Mini Monster", path: ["Page 7", "Beat 5"], query: null },
+		{ author: "Mini Monster", path: ["Page 7", "Beat 6"], query: null },
+		{ author: "Mini Monster", path: ["Page 7", "Beat 7"], query: null },
+		{ author: "Mini Monster", path: ["Page 7", "Beat 8"], query: null },
+		{ author: "Mini Monster", path: ["Page 7", "Beat 9"], query: null },
+		{ author: "Mini Monster", path: ["Page 7", "Beat 10"], query: null },
+		{ author: "Mini Monster", path: ["Page 7", "Beat 11"], query: null },
+		{ author: "Mini Monster", path: ["Page 7", "Beat 14"], query: null },
+		{ author: "Mini Monster", path: ["Page 7", "Beat 16"], query: null },
+		{ author: "Mini Monster", path: ["Page 7", "Beat 17"], query: null },
+		{ author: "Mini Monster", path: ["Page 7", "Beat 18"], query: null },
+		{ author: "Mini Monster", path: ["Page 8", "Beat 4"], query: null },
+		{ author: "Mini Monster", path: ["Page 8", "Beat 8"], query: null },
+		{ author: "Mini Monster", path: ["Page 8", "Beat 14"], query: null },
+		{ author: "Mini Monster", path: ["Page 8", "Beat 20"], query: null },
+		{ author: "Mini Monster", path: ["Page 8", "Beat 30"], query: null },
+		{ author: "Mini Monster", path: ["Page 8", "Beat 31"], query: null },
+		{ author: "Mini Monster", path: ["Page 10", "Beat 11"], query: null },
+		{ author: "Mini Monster", path: ["Page 10", "Beat 12"], query: null },
 	];
 
 	function GrooveLibrary(backend) {
 		this.backend = backend;
 	}
+	// Enforce "Beat <number>" naming under Mini Monster. Renames typos
+	// ("Bat 24" → "Beat 24", "beat 15" → "Beat 15") and deletes non-conforming
+	// entries with no extractable number ("Beat", "Groove Scribe"). On rename
+	// conflict, keeps the properly-named entry and drops the typo.
+	// Idempotent — safe to call every init.
+	GrooveLibrary.prototype.cleanupMiniMonster = function () {
+		var tree = this.backend.read();
+		var mm = tree["Mini Monster"];
+		if (!mm || typeof mm !== "object") return;
+		var changed = false;
+		for (var pageKey in mm) {
+			var page = mm[pageKey];
+			if (typeof page !== "object" || page === null) continue;
+			var keys = Object.keys(page);
+			for (var i = 0; i < keys.length; i++) {
+				var oldName = keys[i];
+				if (/^Beat \d+$/.test(oldName)) continue;
+				var m = /(\d+)/.exec(oldName);
+				if (m) {
+					var newName = "Beat " + m[1];
+					if (page[newName] !== undefined) {
+						delete page[oldName];
+					} else {
+						page[newName] = page[oldName];
+						delete page[oldName];
+					}
+				} else {
+					delete page[oldName];
+				}
+				changed = true;
+			}
+		}
+		if (changed) this.backend.write(tree);
+	};
+
 	// Add any seed entries that don't already exist. Idempotent — user's own
 	// saves and any manual edits at unrelated paths are untouched.
 	GrooveLibrary.prototype.seedMissing = function () {
@@ -199,7 +270,22 @@ var GrooveLibrary = (function () {
 		}
 	};
 	GrooveLibrary.prototype.save = function (a, p, q) { this.backend.save(a, p, q); };
-	GrooveLibrary.prototype.remove = function (a, p) { this.backend.remove(a, p); };
+	// If the (author, path) is defined in the seed at all (as a real entry OR
+	// placeholder), we treat "delete" as "revert to empty placeholder" so the
+	// tree slot stays visible for re-use. Otherwise we fully remove.
+	GrooveLibrary.prototype.remove = function (a, p) {
+		var fullPath = [a].concat(p);
+		var isSeeded = DEFAULT_SEED.some(function (g) {
+			if (g.author !== a || g.path.length !== p.length) return false;
+			for (var i = 0; i < p.length; i++) if (g.path[i] !== p[i]) return false;
+			return true;
+		});
+		if (isSeeded) {
+			this.backend.save(a, p, null);
+		} else {
+			this.backend.remove(a, p);
+		}
+	};
 	GrooveLibrary.prototype.read = function () { return this.backend.read(); };
 
 	// Natural-sort comparator (so "Beat 2" < "Beat 10").
@@ -231,18 +317,25 @@ var GrooveLibrary = (function () {
 	// Render a single subtree recursively. `path` is the accumulated path from
 	// the author root; we use it for click handlers.
 	function renderSubtree(node, path, expandedSet) {
-		if (typeof node === "string") return ""; // handled by parent
+		if (typeof node === "string" || node === null) return ""; // handled by parent
 		var keys = Object.keys(node).sort(naturalCompare);
 		var html = "";
 		for (var i = 0; i < keys.length; i++) {
 			var k = keys[i];
 			var childPath = path.concat([k]);
 			var pathKey = childPath.join("\0");
-			if (typeof node[k] === "string") {
-				// leaf
-				html += '<div class="library-leaf" data-path="' + pathToAttr(childPath) + '">';
+			var val = node[k];
+			if (typeof val === "string" || val === null) {
+				// leaf. null = placeholder / unsaved slot.
+				var isPlaceholder = (val === null);
+				var cls = "library-leaf" + (isPlaceholder ? " library-leaf-placeholder" : "");
+				html += '<div class="' + cls + '" data-path="' + pathToAttr(childPath) + '">';
 				html += '<span class="library-leaf-title">' + escapeHTML(k) + '</span>';
-				html += '<span class="library-leaf-delete" title="Delete"><i class="fa fa-times"></i></span>';
+				if (isPlaceholder) {
+					html += '<span class="library-leaf-hint">empty</span>';
+				} else {
+					html += '<span class="library-leaf-delete" title="Delete"><i class="fa fa-times"></i></span>';
+				}
 				html += '</div>';
 			} else {
 				// folder
@@ -251,7 +344,7 @@ var GrooveLibrary = (function () {
 				html += '<div class="library-folder" data-path="' + pathToAttr(childPath) + '">';
 				html += '<div class="library-folder-name"><i class="fa ' + chev + '"></i> ' + escapeHTML(k) + '</div>';
 				html += '<div class="library-folder-children" style="display:' + (isOpen ? "block" : "none") + '">';
-				html += renderSubtree(node[k], childPath, expandedSet);
+				html += renderSubtree(val, childPath, expandedSet);
 				html += '</div></div>';
 			}
 		}
@@ -312,12 +405,12 @@ var GrooveLibrary = (function () {
 				}
 				return;
 			}
-			// Leaf body click → load.
+			// Leaf body click → load. query may be null for placeholders.
 			var leaf = e.target.closest && e.target.closest(".library-leaf");
 			if (leaf) {
 				var loadPath = parsePathAttr(leaf.getAttribute("data-path"));
-				var query = self._lookup(loadPath);
-				if (query) onLoad(loadPath, query);
+				var query = self._lookup(loadPath); // null for placeholders
+				onLoad(loadPath, query);
 				return;
 			}
 			// Folder header click → toggle expand.

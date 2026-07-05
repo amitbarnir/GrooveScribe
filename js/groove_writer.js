@@ -1030,10 +1030,15 @@ function GrooveWriter() {
 
 	// user library (bookmarks) — lazy-initialized on first use
 	var class_library = null;
+	// When the user clicks a library leaf (saved or placeholder), we remember
+	// its path here. The next Save writes into that exact tree location and
+	// then clears the pointer.
+	var class_pending_library_path = null;
 	function getLibrary() {
 		if (!class_library) {
 			var backend = new GrooveLibrary.LocalStorageBackend();
 			class_library = new GrooveLibrary.GrooveLibrary(backend);
+			class_library.cleanupMiniMonster();
 			class_library.seedMissing();
 		}
 		return class_library;
@@ -1045,10 +1050,27 @@ function GrooveWriter() {
 		if (!contextMenu) return;
 		var lib = getLibrary();
 		lib.render(contextMenu, function (path, query) {
-			// hide menu then load the groove — query already carries Title/Author
+			// remember the target slot for the next Save. For placeholders we
+			// stay on the current page. For saved entries we're about to
+			// navigate, so also persist via sessionStorage so the pointer
+			// survives the reload.
+			class_pending_library_path = path;
+			try { window.sessionStorage.setItem("gscribe_pending_slot", JSON.stringify(path)); } catch (e) {}
 			root.myGrooveUtils.hideContextMenu(contextMenu);
-			var url = window.location.protocol + "//" + window.location.host + window.location.pathname + query;
-			window.location.href = url;
+			if (query) {
+				// saved entry — navigate to it (Title/Author baked into query)
+				var url = window.location.protocol + "//" + window.location.host + window.location.pathname + query;
+				window.location.href = url;
+			} else {
+				// placeholder — pre-fill Title/Author from path, keep current
+				// notes so user can program from wherever they were. Save will
+				// write into this slot.
+				var author = path[0];
+				var title = path.slice(1).length > 0 ? (author + " " + path.slice(1).join(" ")) : author;
+				document.getElementById("tuneTitle").value = title;
+				document.getElementById("tuneAuthor").value = "Joel Rothman";
+				updateSheetMusic();
+			}
 		});
 		var anchorPoint = document.getElementById("libraryAnchor");
 		if (anchorPoint) {
@@ -1058,6 +1080,23 @@ function GrooveWriter() {
 		}
 		root.myGrooveUtils.showContextMenu(contextMenu);
 	};
+
+	// clear the pending slot when user manually edits metadata (they've
+	// diverged from the slot they opened, so a save should go elsewhere)
+	root.clearPendingLibrarySlot = function () {
+		class_pending_library_path = null;
+		try { window.sessionStorage.removeItem("gscribe_pending_slot"); } catch (e) {}
+	};
+
+	// Called at page load. If we navigated here by clicking a saved library
+	// entry, the sessionStorage carries the tree path so the next Save can
+	// write back to the same slot.
+	function restorePendingLibrarySlot() {
+		try {
+			var raw = window.sessionStorage.getItem("gscribe_pending_slot");
+			if (raw) class_pending_library_path = JSON.parse(raw);
+		} catch (e) {}
+	}
 
 	// the user has clicked the Save button next to the tune title/author
 	root.saveToLibraryClick = function () {
@@ -1072,7 +1111,17 @@ function GrooveWriter() {
 			alert("Nothing to save — the current groove has no encoded state.");
 			return;
 		}
-		getLibrary().save(author, [title], "?" + query);
+		if (class_pending_library_path) {
+			// Save into the slot the user opened from the library. Keep the
+			// pointer sticky so subsequent edits+saves land in the same slot;
+			// it gets cleared only when the user loads a different library
+			// entry or manually edits Title/Author.
+			var pAuthor = class_pending_library_path[0];
+			var pSubpath = class_pending_library_path.slice(1);
+			getLibrary().save(pAuthor, pSubpath, "?" + query);
+		} else {
+			getLibrary().save(author, [title], "?" + query);
+		}
 		var btn = document.getElementById("saveToLibraryButton");
 		if (btn) {
 			var orig = btn.innerHTML;
@@ -3449,6 +3498,10 @@ function GrooveWriter() {
 
 		// load the groove from the URL data if it was passed in.
 		set_Default_notes(window.location.search);
+
+		// if we arrived here by clicking a saved library entry, restore the
+		// pending-save slot so the next Save writes back to the same location.
+		restorePendingLibrarySlot();
 
 		// show tom rows by default
 		if (!isTomsVisible())
