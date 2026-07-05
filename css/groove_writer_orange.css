@@ -923,6 +923,104 @@
 	.grooveListLI:hover {
 		background: #cccccc;
 	}
+	#libraryWrapper {
+		display: none;
+		position: fixed;
+		z-index: 999;
+		top: 0px;
+		right: 0px;
+		width: 320px;
+		max-height: 500px;
+		overflow: auto;
+		background: #eeeeee;
+		border: 1px solid #393939;
+		color: #000;
+	}
+	.library-header {
+		padding: 15px;
+		background: var(--highlight-color);
+		font-size: 18px;
+		font-weight: bold;
+	}
+	.library-empty {
+		padding: 20px 15px;
+		font-style: italic;
+		color: #555;
+	}
+	.library-author {
+		border-bottom: solid 1px #393939;
+	}
+	.library-author-name {
+		padding: 8px 15px;
+		background: #dddddd;
+		font-weight: bold;
+		font-size: 13px;
+		cursor: pointer;
+		user-select: none;
+	}
+	.library-author-name:hover {
+		background: #cccccc;
+	}
+	.library-folder-name {
+		padding: 6px 15px 6px 25px;
+		background: #e6e6e6;
+		font-weight: 600;
+		font-size: 12px;
+		cursor: pointer;
+		user-select: none;
+	}
+	.library-folder-name:hover {
+		background: #d0d0d0;
+	}
+	.library-folder-children .library-folder-name {
+		padding-left: 40px;
+	}
+	.library-folder-children .library-folder-children .library-folder-name {
+		padding-left: 55px;
+	}
+	.library-leaf {
+		display: flex;
+		align-items: center;
+		padding: 6px 15px 6px 40px;
+		cursor: pointer;
+	}
+	.library-folder-children .library-leaf {
+		padding-left: 55px;
+	}
+	.library-folder-children .library-folder-children .library-leaf {
+		padding-left: 70px;
+	}
+	.library-leaf:hover {
+		background: #cccccc;
+	}
+	.library-leaf-title {
+		flex: 1;
+	}
+	.library-leaf-delete {
+		padding: 2px 6px;
+		color: #999;
+		visibility: hidden;
+	}
+	.library-leaf:hover .library-leaf-delete {
+		visibility: visible;
+	}
+	.library-leaf-delete:hover {
+		color: #c00;
+	}
+	#saveToLibraryButton {
+		display: inline-block;
+		margin-left: 12px;
+		padding: 4px 10px;
+		background: var(--highlight-color);
+		color: #fff;
+		cursor: pointer;
+		border-radius: 3px;
+		font-size: 13px;
+		user-select: none;
+	}
+	#saveToLibraryButton:hover {
+		filter: brightness(1.1);
+	}
 	hr {
 		width: 795px;
 		margin-left: 0px;

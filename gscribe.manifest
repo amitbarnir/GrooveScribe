@@ -1,6 +1,6 @@
 CACHE MANIFEST
  
-# Version: 1.02
+# Version: 1.03
 
 CACHE:
 index.html
@@ -26,6 +26,7 @@ js/grooves.js
 js/groove_display.js
 js/groove_utils.js
 js/groove_writer.js
+js/groove_library.js
 js/jsmidgen.js
 js/share-button.min.js
 css/groove_debug.css

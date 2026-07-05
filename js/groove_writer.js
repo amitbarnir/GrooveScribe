@@ -1028,6 +1028,59 @@ function GrooveWriter() {
 		}
 	};
 
+	// user library (bookmarks) — lazy-initialized on first use
+	var class_library = null;
+	function getLibrary() {
+		if (!class_library) {
+			var backend = new GrooveLibrary.LocalStorageBackend();
+			class_library = new GrooveLibrary.GrooveLibrary(backend);
+			class_library.seedMissing();
+		}
+		return class_library;
+	}
+
+	// the user has clicked on the Library menu
+	root.libraryAnchorClick = function (event) {
+		var contextMenu = document.getElementById("libraryWrapper");
+		if (!contextMenu) return;
+		var lib = getLibrary();
+		lib.render(contextMenu, function (path, query) {
+			// hide menu then load the groove — query already carries Title/Author
+			root.myGrooveUtils.hideContextMenu(contextMenu);
+			var url = window.location.protocol + "//" + window.location.host + window.location.pathname + query;
+			window.location.href = url;
+		});
+		var anchorPoint = document.getElementById("libraryAnchor");
+		if (anchorPoint) {
+			var anchorPos = getTagPosition(anchorPoint);
+			contextMenu.style.top = anchorPos.y + anchorPoint.offsetHeight + "px";
+			contextMenu.style.left = anchorPos.x + anchorPoint.offsetWidth - 283 + "px";
+		}
+		root.myGrooveUtils.showContextMenu(contextMenu);
+	};
+
+	// the user has clicked the Save button next to the tune title/author
+	root.saveToLibraryClick = function () {
+		var title = document.getElementById("tuneTitle").value.trim();
+		var author = document.getElementById("tuneAuthor").value.trim();
+		if (!title || !author) {
+			alert("Please fill in both Title and Author before saving to the library.");
+			return;
+		}
+		var query = get_FullURLForPage().split("?")[1];
+		if (!query) {
+			alert("Nothing to save — the current groove has no encoded state.");
+			return;
+		}
+		getLibrary().save(author, [title], "?" + query);
+		var btn = document.getElementById("saveToLibraryButton");
+		if (btn) {
+			var orig = btn.innerHTML;
+			btn.innerHTML = '<i class="fa fa-check"></i> Saved';
+			setTimeout(function () { btn.innerHTML = orig; }, 1200);
+		}
+	};
+
 	// the user has clicked on the grooves menu
 	root.groovesAnchorClick = function (event) {
 

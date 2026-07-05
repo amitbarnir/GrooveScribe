@@ -57,6 +57,7 @@
 		<!--   our custom JS  -->
 		<script src="js/groove_writer.js"></script>
 		<script src="js/groove_utils.js"></script>
+		<script src="js/groove_library.js"></script>
 		<script src="js/grooves.js"></script>
 
 		<script type="text/javascript">
@@ -117,6 +118,7 @@
 					</span>
 				</span>
 				<span id="upperRight">
+					<span class="rightButtons" id="libraryAnchor" onclick="myGrooveWriter.libraryAnchorClick(event);"><i class="fa fa-bookmark"></i> Library</span>
 					<span class="rightButtons grooveDB_hidden" id="permutationAnchor" onclick="myGrooveWriter.permutationAnchorClick(event);"><i class="fa fa-bars"></i> Permutations</span>
 					<span class="rightButtons" id="groovesAnchor" onclick="myGrooveWriter.groovesAnchorClick(event);"><i class="fa fa-bars"></i> Grooves</span>
 					<span class="rightButtons" id="helpAnchor" onclick="myGrooveWriter.helpAnchorClick(event);"><i class="fa fa-bars"></i> Help</span>
@@ -156,6 +158,7 @@
 					<span class="sheetMusicTextField"><b>Author:</b> <input class="sheetMusicInputField" id="tuneAuthor" onchange="myGrooveWriter.refresh_ABC();"  type="text"></span>
 					<span class="sheetMusicTextField"><b>Comment:</b> <input class="sheetMusicInputField" id="tuneComments" onchange="myGrooveWriter.refresh_ABC();"  type="text"></span>
 					<span id='KeyButton'><input type="checkbox" class="hiddenCheckbox" id="showLegend" onclick="myGrooveWriter.refresh_ABC();"><label id="LegendLabel" for="showLegend"><i class="fa fa-key"></i></label></span>
+					<span id="saveToLibraryButton" title="Save to Library" onclick="myGrooveWriter.saveToLibraryClick();"><i class="fa fa-star"></i> Save</span>
 				</div>
 
 				<div id="musicalInput" class="fullWidthEle edit-block">
@@ -417,6 +420,8 @@
 				document.write(grooves.getGroovesAsHTML());
 			</script>
 		</div>
+
+		<div id="libraryWrapper"></div>
 
 		<!-- dialog for the TIME label, hidden by default -->
 		<div id="timeSigPopup">
