@@ -183,14 +183,29 @@ if (window.AudioContext || window.webkitAudioContext) (function () {
 		MIDI.channels[channel].instrument = program;
 	};
 
+	// GrooveScribe drum-kit overrides: force specific notes to use a chosen
+	// source sample + fixed pitch shift. The gunshot soundfont's nearest-
+	// neighbor would land on a hi-hat sample or produce too small a pitch
+	// difference for these slots.
+	var GS_PITCH_OVERRIDES = {
+		47: { sourceNote: 48, semitones: -3 },  // Tom2 (Mid Tom): C3 pitched -3 (≈ A2)
+	};
 	root.noteOn = function (channel, note, velocity, delay) {
 		/// check whether the note exists
 		if (!MIDI.channels[channel]) return;
 		var instrument = MIDI.channels[channel].instrument;
-		/// fall back to nearest-neighbor sample with pitch-shift when target is missing
 		var bufferKey = instrument + "" + note;
 		var playbackRate = 1;
-		if (!audioBuffers[bufferKey]) {
+		/// hardcoded override (drum kit voicing)
+		if (GS_PITCH_OVERRIDES[note]) {
+			var ov = GS_PITCH_OVERRIDES[note];
+			var ovKey = instrument + "" + ov.sourceNote;
+			if (audioBuffers[ovKey]) {
+				bufferKey = ovKey;
+				playbackRate = Math.pow(2, ov.semitones / 12);
+			}
+		} else if (!audioBuffers[bufferKey]) {
+			/// fall back to nearest-neighbor sample with pitch-shift when target is missing
 			var nearest = null;
 			for (var d = 1; d < 128; d++) {
 				if (audioBuffers[instrument + "" + (note + d)]) { nearest = note + d; break; }
