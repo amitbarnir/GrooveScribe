@@ -1046,6 +1046,63 @@
 		font-family: monospace;
 		font-size: 14px;
 	}
+	#changelogPopup {
+		display: none;
+		position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+		z-index: 1000;
+		background-color: #FFF;
+		width: 520px;
+		max-height: 70vh;
+		overflow-y: auto;
+		padding: 20px 25px;
+		border: solid 2px #999;
+		border-radius: 5px;
+		box-shadow: 0px 4px 24px rgba(0,0,0,.4);
+	}
+	#changelogPopupTitle {
+		font-size: 26px;
+		font-weight: 700;
+		text-align: center;
+		margin-bottom: 18px;
+	}
+	.changelogEntry {
+		margin-bottom: 18px;
+	}
+	.changelogVersion {
+		font-size: 16px;
+		font-weight: 700;
+		color: var(--highlight-color);
+		border-bottom: 1px solid #DDD;
+		padding-bottom: 4px;
+	}
+	.changelogDate {
+		font-size: 12px;
+		font-weight: 400;
+		color: #999;
+	}
+	.changelogList {
+		margin: 8px 0px 0px 0px;
+		padding-left: 22px;
+		font-size: 14px;
+		line-height: 1.5;
+	}
+	.changelogList li {
+		margin-bottom: 6px;
+	}
+	#changelogPopupCloseButtonDiv {
+		text-align: center;
+		margin-top: 20px;
+	}
+	#changelogPopupCloseButton {
+		font-size: 16px;
+		font-weight: 500;
+		background: var(--highlight-color);
+		color: #FFF;
+		border: 0px;
+		border-radius: 5px;
+		padding: 8px 22px;
+		cursor: pointer;
+	}
 	#fullURLPopup, #metronomeAutoSpeedupConfiguration, #timeSigPopup {
 		/visibility: hidden;
 		display: none;
