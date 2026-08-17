@@ -2597,6 +2597,9 @@ function GrooveWriter() {
 
 		var metronomeFrequency = root.getMetronomeFrequency();
 
+		// re-rolled here so the muted measures move around every time the loop regenerates
+		root.myGrooveUtils.silentMeasurePercentage = root.getSilentMeasurePercentage();
+
 		// just the first measure
 		var num_notes = get32NoteArrayFromClickableUI(Sticking_Array, HH_Array, Snare_Array, Kick_Array, Toms_Array, 0);
 		muteArrayFromClickableUI(Sticking_Array, HH_Array, Snare_Array, Kick_Array, Toms_Array, 0);
@@ -3529,10 +3532,15 @@ function GrooveWriter() {
 		};
 
 		root.myGrooveUtils.midiEventCallbacks.notePlaying = function (myroot, note_type, percent_complete) {
-			if (note_type == "complete" && class_metronome_auto_speed_up_active) {
-				// reload with new tempo
-				root.myGrooveUtils.midiNoteHasChanged();
-				root.metronomeAutoSpeedUpTempoUpdate();
+			if (note_type == "complete") {
+				if (class_metronome_auto_speed_up_active) {
+					// reload with new tempo
+					root.myGrooveUtils.midiNoteHasChanged();
+					root.metronomeAutoSpeedUpTempoUpdate();
+				} else if (root.getSilentMeasurePercentage() > 0) {
+					// force a regenerate so a fresh set of measures gets muted next time round
+					root.myGrooveUtils.midiNoteHasChanged();
+				}
 			}
 
 			hilight_note(note_type, percent_complete);
@@ -3589,6 +3597,12 @@ function GrooveWriter() {
 		if (document.getElementById("metronomeAutoSpeedUpKeepGoingForever"))
 			keepIncreasingForever = document.getElementById("metronomeAutoSpeedUpKeepGoingForever").checked;
 
+		// "Step up all at once": hold the tempo flat for the whole interval, then jump the
+		// full amount in one go, rather than creeping up a bpm at a time across the interval.
+		var stepMode = false;
+		if (document.getElementById("metronomeAutoSpeedUpStepMode"))
+			stepMode = document.getElementById("metronomeAutoSpeedUpStepMode").checked;
+
 		var curTempo = root.myGrooveUtils.getTempo();
 
 		var midiStartTime = root.myGrooveUtils.getMidiStartTime();
@@ -3605,15 +3619,29 @@ function GrooveWriter() {
 		}
 		var totalMidiPlayTime = root.myGrooveUtils.getMidiPlayTime();
 		var timeDiffMilliseconds = totalMidiPlayTime.getTime() - class_our_last_midi_tempo_increase_time.getTime();
-		var tempoDiffFloat = (totalTempoIncreaseAmount) * (timeDiffMilliseconds / (tempoIncreaseInterval * 1000));
+		var tempoDiffInt;
 
-		// round the number down, but keep track of the remainder so we carry it forward.   Otherwise
-		// rounding errors cause us to be way off.
-		tempoDiffFloat += class_our_last_midi_tempo_increase_remainder;
-		var tempoDiffInt = Math.floor(tempoDiffFloat);
-		class_our_last_midi_tempo_increase_remainder = tempoDiffFloat - tempoDiffInt;
+		if (stepMode) {
+			// Nothing happens until a full interval has elapsed, then we jump the whole amount.
+			// Only move the "last increase" marker when we actually jump, otherwise the
+			// interval would restart on every pass through the loop and we'd never get there.
+			if (timeDiffMilliseconds >= tempoIncreaseInterval * 1000) {
+				tempoDiffInt = totalTempoIncreaseAmount;
+				class_our_last_midi_tempo_increase_time = totalMidiPlayTime;
+			} else {
+				tempoDiffInt = 0;
+			}
+		} else {
+			var tempoDiffFloat = (totalTempoIncreaseAmount) * (timeDiffMilliseconds / (tempoIncreaseInterval * 1000));
 
-		class_our_last_midi_tempo_increase_time = totalMidiPlayTime;
+			// round the number down, but keep track of the remainder so we carry it forward.   Otherwise
+			// rounding errors cause us to be way off.
+			tempoDiffFloat += class_our_last_midi_tempo_increase_remainder;
+			tempoDiffInt = Math.floor(tempoDiffFloat);
+			class_our_last_midi_tempo_increase_remainder = tempoDiffFloat - tempoDiffInt;
+
+			class_our_last_midi_tempo_increase_time = totalMidiPlayTime;
+		}
 
 		if (!keepIncreasingForever) {
 			if (curTempo + tempoDiffInt > class_our_midi_start_tempo + totalTempoIncreaseAmount) {
@@ -3624,6 +3652,16 @@ function GrooveWriter() {
 
 		if (tempoDiffInt > 0)
 			root.myGrooveUtils.setTempo(root.myGrooveUtils.getTempo() + tempoDiffInt);
+	};
+
+	// Percentage of measures that get muted at random during playback, so the player has to
+	// hold the time unaided.   Read straight off the slider in the auto speed up panel.
+	root.getSilentMeasurePercentage = function () {
+		var slider = document.getElementById("metronomeAutoSpeedupSilentMeasurePercentage");
+		if (!slider)
+			return 0;
+		var pct = parseInt(slider.value, 10);
+		return isNaN(pct) ? 0 : pct;
 	};
 
 	// takes a string of notes encoded in a serialized string and sets the notes on or off

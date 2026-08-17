@@ -1187,12 +1187,21 @@
 		font-size: 25px;
 		text-align: center;
 	}
-	#metronomeAutoSpeedupTempoIncreaseAmountOutput, #metronomeAutoSpeedupTempoIncreaseIntervalOutput {
+	#metronomeAutoSpeedupTempoIncreaseAmountOutput, #metronomeAutoSpeedupTempoIncreaseIntervalOutput,
+	#metronomeAutoSpeedupSilentMeasurePercentageOutput {
 		color: var(--highlight-color);
 		font-weight: 700;
 	}
-	#metronomeAutoSpeedupConfigurationAmountLable, #metronomeAutoSpeedupConfigurationIntervalLable {
+	#metronomeAutoSpeedupConfigurationAmountLable, #metronomeAutoSpeedupConfigurationIntervalLable,
+	#metronomeAutoSpeedupConfigurationSilenceLable {
 		font-size: 12px;
+	}
+	#metronomeAutoSpeedupSilenceOutputText {
+		font-size: 18px;
+		text-align: center;
+		margin-top: 14px;
+		padding-top: 10px;
+		border-top: 1px solid #DDD;
 	}
 	#metronomeAutoSpeedupConfigurationKeepIncreasing {
 		font-size: 12px;

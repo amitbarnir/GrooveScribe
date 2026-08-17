@@ -133,6 +133,8 @@ function GrooveUtils() {
 
 	// metronome options
 	root.metronomeSolo = false;
+	// 0 - 100.   Percentage of measures muted at random during playback (practice aid).
+	root.silentMeasurePercentage = 0;
 	root.metronomeOffsetClickStart = "1";
   // start with last in the rotation so the next rotation brings it to '1'
 	root.metronomeOffsetClickStartRotation = 0;
@@ -2420,7 +2422,30 @@ function GrooveUtils() {
     var offsetClickStartBeat = root.getMetronomeOptionsOffsetClickStartRotation(isTriplets);
     var delay_for_next_note = 0;
 
+		// Silent measure practice mode.   Mute whole measures at random -- drums and metronome
+		// both -- so the player has to hold the time unaided.   The measures are picked fresh
+		// every time the MIDI is generated, so they move around as the groove loops.
+		var notesPerMeasureFullSize = root.notesPerMeasureInFullSizeArray(isTriplets, timeSigTop, timeSigBottom);
+		var silentMeasures = {};
+		if (root.silentMeasurePercentage > 0 && notesPerMeasureFullSize > 0) {
+			var numMeasuresInGroove = Math.ceil(num_notes / notesPerMeasureFullSize);
+			for (var silent_m = 0; silent_m < numMeasuresInGroove; silent_m++) {
+				if (Math.random() * 100 < root.silentMeasurePercentage)
+					silentMeasures[silent_m] = true;
+			}
+		}
+
 		for (var i = 0; i < num_notes; i++) {
+
+			var thisMeasureIsSilent = (notesPerMeasureFullSize > 0) &&
+				(silentMeasures[Math.floor(i / notesPerMeasureFullSize)] === true);
+
+			// an open hi-hat ringing out of the previous measure would break the silence
+			if (thisMeasureIsSilent && prev_hh_note !== false) {
+				midiTrack.addNoteOff(midi_channel, prev_hh_note, delay_for_next_note);
+				prev_hh_note = false;
+				delay_for_next_note = 0;
+			}
 
 			var duration = 0;
 
@@ -2534,7 +2559,7 @@ function GrooveUtils() {
 				}
 			}
 
-			if (!root.metronomeSolo) { // midiSolo means to play just the metronome
+			if (!root.metronomeSolo && !thisMeasureIsSilent) { // midiSolo means to play just the metronome
 				var hh_velocity = constant_OUR_MIDI_VELOCITY_NORMAL;
 				var hh_note = false;
 				switch (HH_Array[i]) {

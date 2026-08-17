@@ -479,28 +479,43 @@
 		<!-- this is used by the metronome auto speed up option menu, and is hidden by default -->
 		<div id="metronomeAutoSpeedupConfiguration">
 			<div id="metronomeAutoSpeedupOutputText">
-				Increase <span id="metronomeAutoSpeedupTempoIncreaseAmountOutput">5</span> bpm in
-				<span id="metronomeAutoSpeedupTempoIncreaseIntervalOutput">2</span> min
+				Increase <span id="metronomeAutoSpeedupTempoIncreaseAmountOutput">10</span> bpm in
+				<span id="metronomeAutoSpeedupTempoIncreaseIntervalOutput">1</span> min
 			</div>
 			<div id="metronomeAutoSpeedupConfigurationKeepIncreasing">
 				<input type="checkbox" checked id="metronomeAutoSpeedUpKeepGoingForever"><label for="metronomeAutoSpeedUpKeepGoingForever">Keep increasing after the first interval</label>
 			</div>
+			<div id="metronomeAutoSpeedupConfigurationKeepIncreasing">
+				<input type="checkbox" id="metronomeAutoSpeedUpStepMode"><label for="metronomeAutoSpeedUpStepMode" title="Hold the tempo steady for the whole interval, then jump the full amount at once, instead of creeping up gradually">Step up all at once</label>
+			</div>
 			<div id="metronomeAutoSpeedupConfigurationSliders">
 				<div id="metronomeAutoSpeedupConfigurationAmountLable">Amount in BPM</div>
-				<input type=range min=1 max=100 value=5 class="metronomeAutoSpeedUpRange" id="metronomeAutoSpeedupTempoIncreaseAmount" oninput="myGrooveWriter.updateRangeLabel(event, 'metronomeAutoSpeedupTempoIncreaseAmountOutput');">
+				<input type=range min=1 max=100 value=10 class="metronomeAutoSpeedUpRange" id="metronomeAutoSpeedupTempoIncreaseAmount" oninput="myGrooveWriter.updateRangeLabel(event, 'metronomeAutoSpeedupTempoIncreaseAmountOutput');">
 				<div id="metronomeAutoSpeedupConfigurationIntervalLable">Interval in Minutes</div>
-				<input type=range min=1 max=20 value=2 class="metronomeAutoSpeedUpRange" id="metronomeAutoSpeedupTempoIncreaseInterval" step="1" oninput="myGrooveWriter.updateRangeLabel(event, 'metronomeAutoSpeedupTempoIncreaseIntervalOutput');">
+				<input type=range min=1 max=20 value=1 class="metronomeAutoSpeedUpRange" id="metronomeAutoSpeedupTempoIncreaseInterval" step="1" oninput="myGrooveWriter.updateRangeLabel(event, 'metronomeAutoSpeedupTempoIncreaseIntervalOutput');">
+			</div>
+			<div id="metronomeAutoSpeedupSilenceOutputText">
+				Silence <span id="metronomeAutoSpeedupSilentMeasurePercentageOutput">0</span>% of measures
+			</div>
+			<div id="metronomeAutoSpeedupConfigurationSliders">
+				<div id="metronomeAutoSpeedupConfigurationSilenceLable" title="Randomly mutes whole measures - drums and metronome both - so you have to hold the time yourself. Re-rolled every time the loop comes around.">Silent measures %</div>
+				<input type=range min=0 max=90 value=0 step="5" class="metronomeAutoSpeedUpRange" id="metronomeAutoSpeedupSilentMeasurePercentage" oninput="myGrooveWriter.updateRangeLabel(event, 'metronomeAutoSpeedupSilentMeasurePercentageOutput');">
 			</div>
 			<div id="metronomeAutoSpeedupCloseButtonDiv">
 				<button id="metronomeAutoSpeedupConfigurationCloseButton" onclick="myGrooveWriter.close_MetronomeAutoSpeedupConfiguration('ok');">Done</button>
 			</div>
 		</div>
 
+		<!-- "what's new" popup, filled in and shown by groove_changelog.js when the version changes -->
+		<div id="changelogPopup"></div>
+
 
 		<script>
 			// set up the page after it has fully loaded
 			window.onload = function () { 'use strict';
 				myGrooveWriter.runsOnPageLoad();   // Initialize the notes
+				if (typeof GrooveChangelog !== "undefined")
+					GrooveChangelog.showIfVersionChanged();
 			};
 		</script>
 
