@@ -65,12 +65,26 @@ var constant_ABC_T1_Normal = "e";
 var constant_ABC_T2_Normal = "d";
 var constant_ABC_T3_Normal = "B";
 var constant_ABC_T4_Normal = "A";
+// Tom flams.   Unlike the snare flam these are not accented.   A flam is not an accent, and
+// leaving the "!accent!" off also keeps us clear of the two-accents-per-group limit in
+// moveAccentsOrOtherModifiersOutsideOfGroup() below.
+var constant_ABC_T1_Flam = "{/e}e";
+var constant_ABC_T2_Flam = "{/d}d";
+var constant_ABC_T3_Flam = "{/B}B";
+var constant_ABC_T4_Flam = "{/A}A";
 var constant_NUMBER_OF_TOMS = 4;
 var constant_ABC_OFF = false;
 
 var constant_OUR_MIDI_VELOCITY_NORMAL = 85;
 var constant_OUR_MIDI_VELOCITY_ACCENT = 120;
 var constant_OUR_MIDI_VELOCITY_GHOST = 50;
+var constant_OUR_MIDI_VELOCITY_FLAM_GRACE = 55;
+// How far ahead of the main note the flam grace note is struck.   16 ticks is one 32nd note
+// slot, so 4 ticks is a 128th note, which is roughly 45ms at 80bpm.
+var constant_OUR_MIDI_FLAM_GRACE_TICKS = 4;
+// Same idea for the one-off preview click when you set a note, where there is no tempo to
+// scale against, so it is just a fixed number of seconds.
+var constant_OUR_MIDI_FLAM_GRACE_PREVIEW_SECONDS = 0.045;
 var constant_OUR_MIDI_METRONOME_1 = 76;
 var constant_OUR_MIDI_METRONOME_NORMAL = 77;
 var constant_OUR_MIDI_HIHAT_NORMAL = 42;
@@ -538,6 +552,12 @@ function GrooveUtils() {
 	//		x: hi hat splash with foot
 	//		X: kick & hi hat splash with foot simultaneously
 	//
+	//   Tom support (T1 - T4):
+	//		o: normal
+	//		x: normal
+	//		f: flam
+	//		-: off
+	//
 	//  Kick can be notated either with a "K" or a "B"
 	//
 	//  Note that "|" and " " will be skipped so that standard drum tabs can be applied
@@ -575,8 +595,20 @@ function GrooveUtils() {
 				return constant_ABC_SN_Drag;
 			break;
 		case "f":
-			if (drumType == "S")
+			switch (drumType) {
+			case "S":
 				return constant_ABC_SN_Flam;
+			case "T1":
+				return constant_ABC_T1_Flam;
+			case "T2":
+				return constant_ABC_T2_Flam;
+			case "T3":
+				return constant_ABC_T3_Flam;
+			case "T4":
+				return constant_ABC_T4_Flam;
+			default:
+				break;
+			}
 			break;
 		case "g":
 			if (drumType == "S")
@@ -770,6 +802,10 @@ function GrooveUtils() {
 			tabChar = "o";
 			break;
 		case constant_ABC_SN_Flam:
+		case constant_ABC_T1_Flam:
+		case constant_ABC_T2_Flam:
+		case constant_ABC_T3_Flam:
+		case constant_ABC_T4_Flam:
 			tabChar = "f";
 			break;
 		case constant_ABC_SN_Drag:
@@ -1345,8 +1381,13 @@ function GrooveUtils() {
 			moveAccentsOrOtherModifiersOutsideOfGroup(abcNoteStrings, "[");
 			moveAccentsOrOtherModifiersOutsideOfGroup(abcNoteStrings, "]");
 
-			// this is the flam notation, it can't be in a sub grouping
+			// this is the flam notation, it can't be in a sub grouping.
+			// the snare flam is "{/c}", the toms each grace their own pitch.
 			ABC_String += moveAccentsOrOtherModifiersOutsideOfGroup(abcNoteStrings, "{/c}");
+			ABC_String += moveAccentsOrOtherModifiersOutsideOfGroup(abcNoteStrings, "{/e}");
+			ABC_String += moveAccentsOrOtherModifiersOutsideOfGroup(abcNoteStrings, "{/d}");
+			ABC_String += moveAccentsOrOtherModifiersOutsideOfGroup(abcNoteStrings, "{/B}");
+			ABC_String += moveAccentsOrOtherModifiersOutsideOfGroup(abcNoteStrings, "{/A}");
 			// this is the drag notation, it can't be in a sub grouping
 			ABC_String += moveAccentsOrOtherModifiersOutsideOfGroup(abcNoteStrings, "{/cc}");
 
@@ -2398,6 +2439,24 @@ function GrooveUtils() {
 	 *
 	 * The arrays passed in contain the ABC notation for a given note value or false for a rest.
 	 */
+	// If this tom note is a flam, return the MIDI note its grace note should use.
+	// The grace note is the same drum as the main note, just quieter and struck early.
+	// Returns false for anything that isn't a tom flam.
+	function tomFlamGraceMIDINote(abcNote) {
+		switch (abcNote) {
+		case constant_ABC_T1_Flam:
+			return constant_OUR_MIDI_TOM1_NORMAL;
+		case constant_ABC_T2_Flam:
+			return constant_OUR_MIDI_TOM2_NORMAL;
+		case constant_ABC_T3_Flam:
+			return constant_OUR_MIDI_TOM3_NORMAL;
+		case constant_ABC_T4_Flam:
+			return constant_OUR_MIDI_TOM4_NORMAL;
+		default:
+			return false;
+		}
+	}
+
 	root.MIDI_from_HH_Snare_Kick_Arrays = function (midiTrack, HH_Array, Snare_Array, Kick_Array, Toms_Array, midi_output_type, metronome_frequency, num_notes, num_notes_for_swing, swing_percentage, timeSigTop, timeSigBottom) {
 		var prev_metronome_note = false;
 		var prev_hh_note = 46;  // default to open hi-hat so that the first hi-hat note also mutes any previous hh open.
@@ -2478,10 +2537,46 @@ function GrooveUtils() {
 				}
 			}
 
+			// Tom flams.   A flam is a quiet grace note struck just before the main note, so it has
+			// to be emitted before anything else in this slot.   We borrow the grace note's ticks out
+			// of the gap that precedes the slot, which leaves the main note (and every other
+			// instrument in the slot) landing exactly on the beat.
+			var flam_grace_notes = [];
+			if (!root.metronomeSolo && !thisMeasureIsSilent && Toms_Array) {
+				for (var flam_array = 0; flam_array < constant_NUMBER_OF_TOMS; flam_array++) {
+					if (Toms_Array[flam_array] && Toms_Array[flam_array][i] !== undefined) {
+						var grace_note = tomFlamGraceMIDINote(Toms_Array[flam_array][i]);
+						if (grace_note !== false)
+							flam_grace_notes.push(grace_note);
+					}
+				}
+			}
+			if (flam_grace_notes.length > 0) {
+				var borrowed_ticks = 0;
+
+				if (delay_for_next_note >= constant_OUR_MIDI_FLAM_GRACE_TICKS) {
+					// the usual case, pull the grace note ahead of the beat
+					delay_for_next_note -= constant_OUR_MIDI_FLAM_GRACE_TICKS;
+				} else {
+					// No room before the beat.   Happens when a flam is the very first note of the
+					// groove.   Play the grace note now and let the beat slip late by the grace
+					// interval, then hand the ticks back at the end of the slot so nothing drifts.
+					borrowed_ticks = constant_OUR_MIDI_FLAM_GRACE_TICKS;
+				}
+
+				for (var flam_i = 0; flam_i < flam_grace_notes.length; flam_i++) {
+					midiTrack.addNoteOn(midi_channel, flam_grace_notes[flam_i], delay_for_next_note, constant_OUR_MIDI_VELOCITY_FLAM_GRACE);
+					delay_for_next_note = 0; // zero the delay
+				}
+
+				delay_for_next_note = constant_OUR_MIDI_FLAM_GRACE_TICKS;
+				duration -= borrowed_ticks;
+			}
+
 			// Metronome sounds.
 			var metronome_note = false;
 			var metronome_velocity = constant_OUR_MIDI_VELOCITY_ACCENT;
-			if (metronome_frequency > 0) {
+			if (metronome_frequency > 0 && !thisMeasureIsSilent) {
 				var quarterNoteFrequency = (isTriplets ? 12 : 8);
 				var eighthNoteFrequency = (isTriplets ? 6 : 4);
 				var sixteenthNoteFrequency = (isTriplets ? 2 : 2);
@@ -2728,15 +2823,19 @@ function GrooveUtils() {
 						if(Toms_Array[which_array][i] !== undefined) {
 							switch (Toms_Array[which_array][i]) {
 							case constant_ABC_T1_Normal: // Tom 1
+							case constant_ABC_T1_Flam:   // the grace note was already emitted above
 								tom_note = constant_OUR_MIDI_TOM1_NORMAL;  // midi code High tom 2
 								break;
 							case constant_ABC_T2_Normal: // Midi code Mid tom 1
+							case constant_ABC_T2_Flam:
 								tom_note = constant_OUR_MIDI_TOM2_NORMAL;
 								break;
 							case constant_ABC_T3_Normal: // Midi code Mid tom 2
+							case constant_ABC_T3_Flam:
 								tom_note = constant_OUR_MIDI_TOM3_NORMAL;
 								break;
 							case constant_ABC_T4_Normal: // Midi code Low Tom 1
+							case constant_ABC_T4_Flam:
 								tom_note = constant_OUR_MIDI_TOM4_NORMAL;
 								break;
 							case false:

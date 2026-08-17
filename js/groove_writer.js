@@ -25,7 +25,7 @@
 /*jslint browser:true devel:true */
 
 /*global GrooveUtils, Midi, Share */
-/*global MIDI, constant_MAX_MEASURES, constant_DEFAULT_TEMPO, constant_ABC_STICK_R, constant_ABC_STICK_L, constant_ABC_STICK_BOTH, constant_ABC_STICK_OFF, constant_ABC_STICK_COUNT, constant_ABC_HH_Ride, constant_ABC_HH_Ride_Bell, constant_ABC_HH_Cow_Bell, constant_ABC_HH_Crash, constant_ABC_HH_Stacker, constant_ABC_HH_Open, constant_ABC_HH_Close, constant_ABC_HH_Accent, constant_ABC_HH_Normal, constant_ABC_SN_Ghost, constant_ABC_SN_Accent, constant_ABC_SN_Normal, constant_ABC_SN_XStick, constant_ABC_SN_Buzz, constant_ABC_SN_Flam, constant_ABC_SN_Drag, constant_ABC_KI_SandK, constant_ABC_KI_Splash, constant_ABC_KI_Normal, constant_ABC_T1_Normal, constant_ABC_T2_Normal, constant_ABC_T3_Normal, constant_ABC_T4_Normal, constant_NUMBER_OF_TOMS, constant_ABC_OFF, constant_OUR_MIDI_VELOCITY_NORMAL, constant_OUR_MIDI_VELOCITY_ACCENT, constant_OUR_MIDI_VELOCITY_GHOST, constant_OUR_MIDI_METRONOME_1, constant_OUR_MIDI_METRONOME_NORMAL, constant_OUR_MIDI_HIHAT_NORMAL, constant_OUR_MIDI_HIHAT_OPEN, constant_OUR_MIDI_HIHAT_ACCENT, constant_OUR_MIDI_HIHAT_CRASH, constant_OUR_MIDI_HIHAT_STACKER, constant_OUR_MIDI_HIHAT_RIDE, constant_OUR_MIDI_HIHAT_FOOT, constant_OUR_MIDI_SNARE_NORMAL, constant_OUR_MIDI_SNARE_ACCENT, constant_OUR_MIDI_SNARE_GHOST, constant_OUR_MIDI_SNARE_XSTICK, constant_OUR_MIDI_SNARE_XSTICK, constant_OUR_MIDI_SNARE_FLAM, onstant_OUR_MIDI_SNARE_DRAG, constant_OUR_MIDI_KICK_NORMAL, constant_OUR_MIDI_TOM1_NORMAL, constant_OUR_MIDI_TOM2_NORMAL, constant_OUR_MIDI_TOM4_NORMAL, constant_OUR_MIDI_TOM4_NORMAL */
+/*global MIDI, constant_MAX_MEASURES, constant_DEFAULT_TEMPO, constant_ABC_STICK_R, constant_ABC_STICK_L, constant_ABC_STICK_BOTH, constant_ABC_STICK_OFF, constant_ABC_STICK_COUNT, constant_ABC_HH_Ride, constant_ABC_HH_Ride_Bell, constant_ABC_HH_Cow_Bell, constant_ABC_HH_Crash, constant_ABC_HH_Stacker, constant_ABC_HH_Open, constant_ABC_HH_Close, constant_ABC_HH_Accent, constant_ABC_HH_Normal, constant_ABC_SN_Ghost, constant_ABC_SN_Accent, constant_ABC_SN_Normal, constant_ABC_SN_XStick, constant_ABC_SN_Buzz, constant_ABC_SN_Flam, constant_ABC_SN_Drag, constant_ABC_KI_SandK, constant_ABC_KI_Splash, constant_ABC_KI_Normal, constant_ABC_T1_Normal, constant_ABC_T2_Normal, constant_ABC_T3_Normal, constant_ABC_T4_Normal, constant_ABC_T1_Flam, constant_ABC_T2_Flam, constant_ABC_T4_Flam, constant_NUMBER_OF_TOMS, constant_ABC_OFF, constant_OUR_MIDI_VELOCITY_NORMAL, constant_OUR_MIDI_VELOCITY_ACCENT, constant_OUR_MIDI_VELOCITY_GHOST, constant_OUR_MIDI_VELOCITY_FLAM_GRACE, constant_OUR_MIDI_FLAM_GRACE_PREVIEW_SECONDS, constant_OUR_MIDI_METRONOME_1, constant_OUR_MIDI_METRONOME_NORMAL, constant_OUR_MIDI_HIHAT_NORMAL, constant_OUR_MIDI_HIHAT_OPEN, constant_OUR_MIDI_HIHAT_ACCENT, constant_OUR_MIDI_HIHAT_CRASH, constant_OUR_MIDI_HIHAT_STACKER, constant_OUR_MIDI_HIHAT_RIDE, constant_OUR_MIDI_HIHAT_FOOT, constant_OUR_MIDI_SNARE_NORMAL, constant_OUR_MIDI_SNARE_ACCENT, constant_OUR_MIDI_SNARE_GHOST, constant_OUR_MIDI_SNARE_XSTICK, constant_OUR_MIDI_SNARE_XSTICK, constant_OUR_MIDI_SNARE_FLAM, onstant_OUR_MIDI_SNARE_DRAG, constant_OUR_MIDI_KICK_NORMAL, constant_OUR_MIDI_TOM1_NORMAL, constant_OUR_MIDI_TOM2_NORMAL, constant_OUR_MIDI_TOM4_NORMAL, constant_OUR_MIDI_TOM4_NORMAL */
 
 // GrooveWriter class.   The only one in this file.
 
@@ -234,13 +234,35 @@ function GrooveWriter() {
 	// returns the ABC notation for the Tom state
 	// false = off
 	// "x" = normal tom
+	// "f" = flam
 	function get_tom_state(id, tom_num, returnType) {
 
 		var tomOn = (document.getElementById("tom_circle" + tom_num + "-" + id).style.backgroundColor == constant_note_on_color_rgb);
+		var tomFlamOn = (document.getElementById("tom_flam" + tom_num + "-" + id).style.color == constant_note_on_color_rgb);
 
 		if (returnType != "ABC" && returnType != "URL") {
 			console.log("bad returnType in get_kick_state()");
 			returnType = "ABC";
+		}
+
+		if (tomFlamOn) {
+			if (returnType == "ABC")
+				switch (tom_num) {
+					case 1:
+						return constant_ABC_T1_Flam; // flam
+						break;
+					case 2:
+						return constant_ABC_T2_Flam; // flam
+						break;
+					case 4:
+						return constant_ABC_T4_Flam; // flam
+						break;
+					default:
+						console.log("bad switch in get_tom_state. bad tom num:" + tom_num);
+						break;
+				}
+			else if (returnType == "URL")
+				return "f"; // flam
 		}
 
 		if (tomOn) {
@@ -271,6 +293,10 @@ function GrooveWriter() {
 
 	// set the tom note on with type
 	function set_tom_state(id, tom_num, mode, make_sound) {
+
+		// hide everything optional
+		document.getElementById("tom_flam" + tom_num + "-" + id).style.color = constant_note_hidden_color_rgb;
+
 		// turn stuff on conditionally
 		switch (mode) {
 			case "off":
@@ -281,25 +307,63 @@ function GrooveWriter() {
 				document.getElementById("tom_circle" + tom_num + "-" + id).style.backgroundColor = constant_note_on_color_hex;
 				document.getElementById("tom_circle" + tom_num + "-" + id).style.borderColor = constant_note_border_color_hex;
 				if (make_sound)
-					switch (tom_num) {
-						case 1:
-							play_single_note_for_note_setting(constant_OUR_MIDI_TOM1_NORMAL);
-							break;
-						case 2:
-							play_single_note_for_note_setting(constant_OUR_MIDI_TOM2_NORMAL);
-							break;
-						case 4:
-							play_single_note_for_note_setting(constant_OUR_MIDI_TOM4_NORMAL);
-							break;
-						default:
-							console.log("bad switch in set_tom_state. bad tom num:" + tom_num);
-							break;
-					}
+					play_single_note_for_tom(tom_num);
+				break;
+			case "flam":
+				// the flam glyph is a note head of its own, so the plain circle gets hidden
+				document.getElementById("tom_circle" + tom_num + "-" + id).style.backgroundColor = constant_note_hidden_color_rgb;
+				document.getElementById("tom_circle" + tom_num + "-" + id).style.borderColor = constant_note_hidden_color_rgb;
+				document.getElementById("tom_flam" + tom_num + "-" + id).style.color = constant_note_on_color_hex;
+				if (make_sound)
+					play_flam_for_tom(tom_num);
 				break;
 			default:
 				console.log("bad switch in set_tom_state");
 				break;
 		}
+	}
+
+	function midi_note_for_tom(tom_num) {
+		switch (tom_num) {
+			case 1:
+				return constant_OUR_MIDI_TOM1_NORMAL;
+			case 2:
+				return constant_OUR_MIDI_TOM2_NORMAL;
+			case 4:
+				return constant_OUR_MIDI_TOM4_NORMAL;
+			default:
+				console.log("bad switch in midi_note_for_tom. bad tom num:" + tom_num);
+				return false;
+		}
+	}
+
+	function play_single_note_for_tom(tom_num) {
+		var note = midi_note_for_tom(tom_num);
+		if (note !== false)
+			play_single_note_for_note_setting(note);
+	}
+
+	// The toms have no pre-baked flam sample the way the snare does (note 107), so we play
+	// the flam for real: a quiet grace note a hair before the main hit, same drum.
+	function play_flam_for_tom(tom_num) {
+		var note = midi_note_for_tom(tom_num);
+		if (note === false)
+			return;
+
+		var player = false;
+		if (MIDI.WebAudio)
+			player = MIDI.WebAudio;
+		else if (MIDI.AudioTag)
+			player = MIDI.AudioTag;
+
+		if (!player) {
+			play_single_note_for_note_setting(note);
+			return;
+		}
+
+		// the delay argument on noteOn is in seconds
+		player.noteOn(9, note, constant_OUR_MIDI_VELOCITY_FLAM_GRACE, 0);
+		player.noteOn(9, note, constant_OUR_MIDI_VELOCITY_NORMAL, constant_OUR_MIDI_FLAM_GRACE_PREVIEW_SECONDS);
 	}
 
 	// silly helpers, but needed for argument compatibility with the other set states
@@ -3694,6 +3758,12 @@ function GrooveWriter() {
 	//      x: hi hat splash with foot
 	//      X: kick & hi hat splash with foot simultaneously
 	//
+	//   Tom support (T1, T2, T4):
+	//      o: normal
+	//      x: normal
+	//      f: flam
+	//      -: off
+	//
 	//  Note that "|" and " " will be skipped so that standard drum tabs can be applied
 	//  Example:
 	//     H=|x---x---x---x---|x---x---x---x---|x---x---x---x---|
@@ -3941,6 +4011,11 @@ function GrooveWriter() {
 				break;
 			case constant_ABC_T4_Normal:
 				setFunction(displayIndex, "normal", false);
+				break;
+			case constant_ABC_T1_Flam:
+			case constant_ABC_T2_Flam:
+			case constant_ABC_T4_Flam:
+				setFunction(displayIndex, "flam", false);
 				break;
 			case constant_ABC_SN_Ghost:
 				setFunction(displayIndex, "ghost", false);
@@ -4465,6 +4540,29 @@ function GrooveWriter() {
 		updateSheetMusic();
 	};
 
+	// The flam glyph for a tom note.   Same drawing the snare uses: a small grace note head
+	// slurred into a full note head.   Hidden (transparent) until the note is set to "flam".
+	function HTMLforTomFlamNote(tom_num, i) {
+		return ('<div class="tom_flam note_part" id="tom_flam' + tom_num + '-' + i + '"><i class="fa ">' +
+					'<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" width="30" height="30">' +
+					'	<style type="text/css">' +
+					'		.flam_fill {fill: currentColor}' +
+					'		.flam_stroke {stroke: currentColor; fill: none; stroke-width: .7}' +
+					'	</style>' +
+					'	<defs>' +
+					'		<path id="flam_ghd" class="flam_fill" d="m1.7-1c-1-1.7-4.5 0.2-3.4 2 1 1.7 4.5-0.2 3.4-2"></path>' +
+					'		<ellipse id="flam_hd" rx="4.1" ry="2.9" transform="rotate(-20)" class="flam_fill"></ellipse>' +
+					'	</defs>' +
+					'	<g id="note" transform="translate(-44 -35)">' +
+					'		<path class="flam_stroke" d="m52.1 53.34v-14M52.1 39.34c0.6 3.4 5.6 3.8 3 10 1.2-4.4-1.4-7-3-7"></path>' +
+					'		<use x="50.50" y="53.34" xlink:href="#flam_ghd"></use>' +
+					'		<path class="flam_stroke" d="m49.5 49.34l9-5"></path>' +
+					'		<path class="flam_stroke" d="m50.5 58.34c2.9 3 11.6 3 14.5 0M69.5 53.34v-21"></path><use x="66.00" y="53.34" xlink:href="#flam_hd"></use>' +
+					'	</g>' +
+					'</svg>' +
+				'</i></div>');
+	}
+
 	// public function
 	// function to create HTML for the music staff and notes.   We usually want more than one of these
 	// baseIndex is the index for the css labels "staff-container1, staff-container2"
@@ -4575,7 +4673,8 @@ function GrooveWriter() {
 		for (i = indexStartForNotes; i < class_notes_per_measure + indexStartForNotes; i++) {
 			newHTML += ('\
 						<div id="tom1-' + i + '" class="tom" onClick="myGrooveWriter.noteLeftClick(event, \'tom1\', ' + i + ')" oncontextmenu="event.preventDefault(); myGrooveWriter.noteRightClick(event, \'tom1\', ' + i + ')" onmouseenter="myGrooveWriter.noteOnMouseEnter(event, \'tom1\', ' + i + ')">\
-							<div class="tom_circle note_part"  id="tom_circle1-' + i + '"></div>\
+							<div class="tom_circle note_part"  id="tom_circle1-' + i + '"></div>' +
+							HTMLforTomFlamNote(1, i) + '\
 						</div>\n\
 						');
 
@@ -4593,7 +4692,8 @@ function GrooveWriter() {
 		for (i = indexStartForNotes; i < class_notes_per_measure + indexStartForNotes; i++) {
 			newHTML += ('\
 						<div id="tom2-' + i + '" class="tom" onClick="myGrooveWriter.noteLeftClick(event, \'tom2\', ' + i + ')" oncontextmenu="event.preventDefault(); myGrooveWriter.noteRightClick(event, \'tom2\', ' + i + ')" onmouseenter="myGrooveWriter.noteOnMouseEnter(event, \'tom2\', ' + i + ')">\
-							<div class="tom_circle note_part"  id="tom_circle2-' + i + '"></div>\
+							<div class="tom_circle note_part"  id="tom_circle2-' + i + '"></div>' +
+							HTMLforTomFlamNote(2, i) + '\
 						</div>\n\
 						');
 
@@ -4677,7 +4777,8 @@ function GrooveWriter() {
 		for (i = indexStartForNotes; i < class_notes_per_measure + indexStartForNotes; i++) {
 			newHTML += ('\
 						<div id="tom4-' + i + '" class="tom" onClick="myGrooveWriter.noteLeftClick(event, \'tom4\', ' + i + ')" oncontextmenu="event.preventDefault(); myGrooveWriter.noteRightClick(event, \'tom4\', ' + i + ')" onmouseenter="myGrooveWriter.noteOnMouseEnter(event, \'tom4\', ' + i + ')">\
-							<div class="tom_circle note_part"  id="tom_circle4-' + i + '"></div>\
+							<div class="tom_circle note_part"  id="tom_circle4-' + i + '"></div>' +
+							HTMLforTomFlamNote(4, i) + '\
 						</div>\n\
 						');
 
