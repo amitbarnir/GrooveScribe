@@ -1103,7 +1103,7 @@
 		padding: 8px 22px;
 		cursor: pointer;
 	}
-	#fullURLPopup, #metronomeAutoSpeedupConfiguration, #timeSigPopup {
+	#fullURLPopup, #metronomeAutoSpeedupConfiguration, #silentMeasuresConfiguration, #timeSigPopup {
 		/visibility: hidden;
 		display: none;
 		position:absolute; left:300px; top:250px; z-index:999;
@@ -1238,33 +1238,27 @@
 	.metronomeAutoSpeedupInputRow {
 		vertical-align: text-bottom;
 	}
-	#metronomeAutoSpeedupConfigurationSliders {
+	#metronomeAutoSpeedupConfigurationSliders, #silentMeasuresConfigurationSliders {
 		width: 370px;
 		margin: 0px auto;
 	}
-	#metronomeAutoSpeedupTempoIncreaseAmount, #metronomeAutoSpeedupTempoIncreaseInterval {
+	#metronomeAutoSpeedupTempoIncreaseAmount, #metronomeAutoSpeedupTempoIncreaseInterval,
+	#silentMeasuresPercentage {
 		background: var(--highlight-color);
 		width: 365px;
 	}
-	#metronomeAutoSpeedupOutputText {
+	#metronomeAutoSpeedupOutputText, #silentMeasuresOutputText {
 		font-size: 25px;
 		text-align: center;
 	}
 	#metronomeAutoSpeedupTempoIncreaseAmountOutput, #metronomeAutoSpeedupTempoIncreaseIntervalOutput,
-	#metronomeAutoSpeedupSilentMeasurePercentageOutput {
+	#silentMeasuresPercentageOutput {
 		color: var(--highlight-color);
 		font-weight: 700;
 	}
 	#metronomeAutoSpeedupConfigurationAmountLable, #metronomeAutoSpeedupConfigurationIntervalLable,
-	#metronomeAutoSpeedupConfigurationSilenceLable {
+	#silentMeasuresConfigurationLable {
 		font-size: 12px;
-	}
-	#metronomeAutoSpeedupSilenceOutputText {
-		font-size: 18px;
-		text-align: center;
-		margin-top: 14px;
-		padding-top: 10px;
-		border-top: 1px solid #DDD;
 	}
 	#metronomeAutoSpeedupConfigurationKeepIncreasing {
 		font-size: 12px;
@@ -1273,11 +1267,11 @@
 		vertical-align: middle;
 		margin-bottom: 10px;
 	}
-	#metronomeAutoSpeedupCloseButtonDiv {
+	#metronomeAutoSpeedupCloseButtonDiv, #silentMeasuresCloseButtonDiv {
 		text-align: center;
 		margin-top: 15px;
 	}
-	#metronomeAutoSpeedupConfigurationCloseButton {
+	#metronomeAutoSpeedupConfigurationCloseButton, #silentMeasuresConfigurationCloseButton {
 		font-size: 16px;
 		font-weight: 500;
 		background: var(--highlight-color);

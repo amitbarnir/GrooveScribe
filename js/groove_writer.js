@@ -47,6 +47,7 @@ function GrooveWriter() {
 	var class_note_value_per_measure = 4;     // TimeSigBottom
 	var class_notes_per_measure = root.myGrooveUtils.calc_notes_per_measure(class_time_division, class_num_beats_per_measure, class_note_value_per_measure);
 	var class_metronome_auto_speed_up_active = false;
+	var class_metronome_silent_measures_active = false;
 	var class_metronome_count_in_active = false;
 	var class_metronome_count_in_is_playing = false;
 
@@ -1269,6 +1270,7 @@ function GrooveWriter() {
 
 		if (root.myGrooveUtils.getMetronomeSolo() ||
 				class_metronome_auto_speed_up_active ||
+				class_metronome_silent_measures_active ||
 				root.myGrooveUtils.getMetronomeOffsetClickStart() != "1") {
 			// make menu look active
 			addOrRemoveKeywordFromClassById("metronomeOptionsAnchor", "selected", true)
@@ -1305,6 +1307,17 @@ function GrooveWriter() {
 					addOrRemoveKeywordFromClassById("metronomeOptionsContextMenuSpeedUp", "menuChecked", true);
 					root.show_MetronomeAutoSpeedupConfiguration();
 				}
+				break;
+
+			case "Silence":
+				if (class_metronome_silent_measures_active) {
+					// just turn it off if it is on, don't show the configurator
+					root.setSilentMeasuresActive(false);
+				} else {
+					root.setSilentMeasuresActive(true);
+					root.show_SilentMeasuresConfiguration();
+				}
+				root.myGrooveUtils.midiNoteHasChanged(); // if playing need to refresh
 				break;
 
 			case "CountIn":
@@ -3719,13 +3732,46 @@ function GrooveWriter() {
 	};
 
 	// Percentage of measures that get muted at random during playback, so the player has to
-	// hold the time unaided.   Read straight off the slider in the auto speed up panel.
+	// hold the time unaided.   Its own metronome option, independent of auto speed up, so the
+	// menu toggle is the on/off and the slider only says how much.   Returns 0 when off.
 	root.getSilentMeasurePercentage = function () {
-		var slider = document.getElementById("metronomeAutoSpeedupSilentMeasurePercentage");
+		if (!class_metronome_silent_measures_active)
+			return 0;
+
+		var slider = document.getElementById("silentMeasuresPercentage");
 		if (!slider)
 			return 0;
 		var pct = parseInt(slider.value, 10);
 		return isNaN(pct) ? 0 : pct;
+	};
+
+	root.isSilentMeasuresActive = function () {
+		return class_metronome_silent_measures_active;
+	};
+
+	// GrooveDBCreateGroove.html loads this file but has no metronome menu, so don't go poking
+	// at menu items that aren't there
+	function hasMetronomeOptionsMenu() {
+		return !!document.getElementById("metronomeOptionsContextMenu");
+	}
+
+	root.setSilentMeasuresActive = function (onElseOff) {
+		class_metronome_silent_measures_active = !!onElseOff;
+
+		if (hasMetronomeOptionsMenu()) {
+			addOrRemoveKeywordFromClassById("metronomeOptionsContextMenuSilence", "menuChecked", class_metronome_silent_measures_active);
+			root.metronomeOptionsMenuSetSelectedState();
+		}
+	};
+
+	root.setSilentMeasurePercentage = function (pct) {
+		var slider = document.getElementById("silentMeasuresPercentage");
+		if (slider) {
+			slider.value = pct;
+			var output = document.getElementById("silentMeasuresPercentageOutput");
+			if (output)
+				output.innerHTML = slider.value;
+		}
 	};
 
 	// takes a string of notes encoded in a serialized string and sets the notes on or off
@@ -4068,6 +4114,9 @@ function GrooveWriter() {
 	root.show_MetronomeAutoSpeedupConfiguration = function () {
 		var popup = document.getElementById("metronomeAutoSpeedupConfiguration");
 
+		// both configurators sit at the same spot, so never leave the other one underneath
+		root.close_SilentMeasuresConfiguration();
+
 		if (popup) {
 			popup.style.display = "block";
 		}
@@ -4081,6 +4130,30 @@ function GrooveWriter() {
 
 		if (popup)
 			popup.style.display = "none";
+	};
+
+	root.show_SilentMeasuresConfiguration = function () {
+		var popup = document.getElementById("silentMeasuresConfiguration");
+
+		// both configurators sit at the same spot, so never leave the other one underneath
+		root.close_MetronomeAutoSpeedupConfiguration();
+
+		if (popup)
+			popup.style.display = "block";
+
+		var slider = document.getElementById("silentMeasuresPercentage");
+		var output = document.getElementById("silentMeasuresPercentageOutput");
+		if (slider && output)
+			output.innerHTML = slider.value;
+	};
+
+	root.close_SilentMeasuresConfiguration = function (type) {
+		var popup = document.getElementById("silentMeasuresConfiguration");
+
+		if (popup)
+			popup.style.display = "none";
+
+		root.myGrooveUtils.midiNoteHasChanged(); // pick up the new percentage on the next pass
 	};
 
 	root.timeSigPopupOpen = function(type) {
