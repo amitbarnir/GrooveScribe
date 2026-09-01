@@ -3009,7 +3009,7 @@ function GrooveUtils() {
 	};
 
 	root.isPlaying = function () {
-		return MIDI.Player.playing;
+		return !!(MIDI.Player && MIDI.Player.playing);
 	};
 
 	root.repeatMIDI_playback = function () {

@@ -152,7 +152,18 @@ function GrooveWriter() {
 		return false;
 	}
 
+	// While the groove is looping, the note we just added is already going to be heard, in time,
+	// when the MIDI reloads at the top of the phrase.   Firing the preview as well puts a hit in
+	// the middle of the bar that isn't in the groove, which throws the player off.   So stay
+	// quiet and let the repeat do the talking.   Every preview path has to check this.
+	function preview_sounds_are_muted() {
+		return root.myGrooveUtils.isPlaying();
+	}
+
 	function play_single_note_for_note_setting(note_val) {
+		if (preview_sounds_are_muted())
+			return;
+
 		if (MIDI.WebAudio) {
 			MIDI.WebAudio.noteOn(9, note_val, constant_OUR_MIDI_VELOCITY_NORMAL, 0);
 		} else if (MIDI.AudioTag) {
@@ -349,6 +360,10 @@ function GrooveWriter() {
 	function play_flam_for_tom(tom_num) {
 		var note = midi_note_for_tom(tom_num);
 		if (note === false)
+			return;
+
+		// this path talks to MIDI directly, so it needs the mute check of its own
+		if (preview_sounds_are_muted())
 			return;
 
 		var player = false;
