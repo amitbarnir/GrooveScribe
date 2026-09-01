@@ -766,6 +766,14 @@
 		margin-top: 3px;
 		cursor: pointer;
 		color: var(--highlight-color-on-white);
+		/* The remove button is the last thing inside .staff-container, and .staff-container
+		 * has margin-right: -3px with an opaque white background.   That makes the next
+		 * measure's box start 3px early and paint over this button's right hand edge, so
+		 * clicks that land in that sliver hit the next measure instead and appear to do
+		 * nothing.   Lift the button out of the normal flow's paint order so it always wins.
+		 * Positioning only, no geometry change. */
+		position: relative;
+		z-index: 1;
 	}
 	.closeMeasureButton:hover, #addMeasureButton:hover {
 		color: #000;
