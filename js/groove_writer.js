@@ -2811,6 +2811,17 @@ function GrooveWriter() {
 		myGrooveData.metronomeFrequency = root.getMetronomeFrequency();
 		myGrooveData.kickStemsUp = true;
 
+		// practice settings, so a shared URL carries how you practice the groove as well as the notes
+		myGrooveData.silentMeasurePercentage = root.getSilentMeasurePercentage();
+		myGrooveData.autoSpeedUpActive = class_metronome_auto_speed_up_active;
+		if (document.getElementById("metronomeAutoSpeedupTempoIncreaseAmount"))
+			myGrooveData.autoSpeedUpBpm = parseInt(document.getElementById("metronomeAutoSpeedupTempoIncreaseAmount").value, 10);
+		myGrooveData.autoSpeedUpIntervalSeconds = root.getMetronomeAutoSpeedupIntervalSeconds();
+		if (document.getElementById("metronomeAutoSpeedUpKeepGoingForever"))
+			myGrooveData.autoSpeedUpKeepGoingForever = document.getElementById("metronomeAutoSpeedUpKeepGoingForever").checked;
+		if (document.getElementById("metronomeAutoSpeedUpStepMode"))
+			myGrooveData.autoSpeedUpStepMode = document.getElementById("metronomeAutoSpeedUpStepMode").checked;
+
 		for (var i = 0; i < class_number_of_measures; i++) {
 			var total_notes = class_notes_per_measure * class_number_of_measures;
 			myGrooveData.sticking_array = [];
@@ -4513,8 +4524,51 @@ function GrooveWriter() {
 
 		root.setMetronomeFrequency(myGrooveData.metronomeFrequency);
 
+		root.applyPracticeSettingsFromGrooveData(myGrooveData);
+
 		updateSheetMusic();
 	}
+
+	// Put the silent measure and auto speed up settings a URL carried back into the UI, and arm
+	// the matching menu options.   A URL that says "speed this up" is useless if you then have
+	// to go and switch it on by hand.
+	root.applyPracticeSettingsFromGrooveData = function (myGrooveData) {
+
+		root.setSilentMeasuresActive(myGrooveData.silentMeasurePercentage > 0);
+		if (myGrooveData.silentMeasurePercentage > 0)
+			root.setSilentMeasurePercentage(myGrooveData.silentMeasurePercentage);
+
+		var amount = document.getElementById("metronomeAutoSpeedupTempoIncreaseAmount");
+		if (amount) {
+			amount.value = myGrooveData.autoSpeedUpBpm;
+			var amountOutput = document.getElementById("metronomeAutoSpeedupTempoIncreaseAmountOutput");
+			if (amountOutput)
+				amountOutput.innerHTML = amount.value;
+		}
+
+		var interval = document.getElementById("metronomeAutoSpeedupTempoIncreaseInterval");
+		if (interval) {
+			interval.value = root.metronomeAutoSpeedupSliderValueFromIntervalSeconds(myGrooveData.autoSpeedUpIntervalSeconds);
+			var intervalOutput = document.getElementById("metronomeAutoSpeedupTempoIncreaseIntervalOutput");
+			if (intervalOutput)
+				intervalOutput.innerHTML = root.metronomeAutoSpeedupIntervalText(root.getMetronomeAutoSpeedupIntervalSeconds());
+		}
+
+		var forever = document.getElementById("metronomeAutoSpeedUpKeepGoingForever");
+		if (forever)
+			forever.checked = myGrooveData.autoSpeedUpKeepGoingForever;
+
+		var stepMode = document.getElementById("metronomeAutoSpeedUpStepMode");
+		if (stepMode)
+			stepMode.checked = myGrooveData.autoSpeedUpStepMode;
+
+		class_metronome_auto_speed_up_active = !!myGrooveData.autoSpeedUpActive;
+
+		if (hasMetronomeOptionsMenu()) {
+			addOrRemoveKeywordFromClassById("metronomeOptionsContextMenuSpeedUp", "menuChecked", class_metronome_auto_speed_up_active);
+			root.metronomeOptionsMenuSetSelectedState();
+		}
+	};
 
 	root.loadNewGroove = function (encodedURLData) {
 		set_Default_notes(encodedURLData);

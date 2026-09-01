@@ -192,6 +192,14 @@ function GrooveUtils() {
 		this.tempo = constant_DEFAULT_TEMPO;
 		this.kickStemsUp = true;
 		this.metronomeFrequency = 0; // 0, 4, 8, 16
+		// practice settings.   These ride along in the URL so a groove can be shared or
+		// bookmarked with the way you practice it, not just the notes.
+		this.silentMeasurePercentage = 0;    // 0 == silent measures off
+		this.autoSpeedUpActive = false;
+		this.autoSpeedUpBpm = 10;            // how much to climb
+		this.autoSpeedUpIntervalSeconds = 60; // how long to take doing it
+		this.autoSpeedUpKeepGoingForever = true;
+		this.autoSpeedUpStepMode = false;    // jump the whole amount at once instead of ramping
 		this.debugMode = root.debugMode;
 		this.grooveDBAuthoring = root.grooveDBAuthoring;
 		this.viewMode = root.viewMode;
@@ -997,6 +1005,31 @@ function GrooveUtils() {
 
 		myGrooveData.metronomeFrequency = parseInt(root.getQueryVariableFromString("MetronomeFreq", "0", encodedURLData), 10);
 
+		// practice settings.   Both are optional;  an older URL just leaves them at their defaults.
+		var silencePct = parseInt(root.getQueryVariableFromString("Silence", "0", encodedURLData), 10);
+		if (isNaN(silencePct) || silencePct < 0)
+			silencePct = 0;
+		myGrooveData.silentMeasurePercentage = Math.min(silencePct, 90);
+
+		// packed as amount,intervalSeconds,keepGoingForever,stepMode.   Anything missing or
+		// unparseable falls back to the field's default rather than throwing the lot away.
+		var speedUpString = root.getQueryVariableFromString("SpeedUp", false, encodedURLData);
+		if (speedUpString) {
+			var speedUpParts = String(speedUpString).split(",");
+			var speedUpBpm = parseInt(speedUpParts[0], 10);
+			var speedUpInterval = parseInt(speedUpParts[1], 10);
+
+			myGrooveData.autoSpeedUpActive = true;
+			if (!isNaN(speedUpBpm) && speedUpBpm > 0)
+				myGrooveData.autoSpeedUpBpm = Math.min(speedUpBpm, 100);
+			if (!isNaN(speedUpInterval) && speedUpInterval > 0)
+				myGrooveData.autoSpeedUpIntervalSeconds = speedUpInterval;
+			if (speedUpParts.length > 2)
+				myGrooveData.autoSpeedUpKeepGoingForever = (speedUpParts[2] === "1");
+			if (speedUpParts.length > 3)
+				myGrooveData.autoSpeedUpStepMode = (speedUpParts[3] === "1");
+		}
+
 		myGrooveData.numberOfMeasures = parseInt(root.getQueryVariableFromString("measures", 1, encodedURLData), 10);
 		if (myGrooveData.numberOfMeasures < 1 || isNaN(myGrooveData.numberOfMeasures))
 			myGrooveData.numberOfMeasures = 1;
@@ -1133,6 +1166,19 @@ function GrooveUtils() {
 		// # metronome setting
 		if(myGrooveData.metronomeFrequency !== 0) {
 			fullURL += "&MetronomeFreq=" + myGrooveData.metronomeFrequency;
+		}
+
+		// Practice settings.   Only written when they are actually switched on, so an ordinary
+		// groove URL is no longer than it was before.
+		if (myGrooveData.silentMeasurePercentage > 0)
+			fullURL += "&Silence=" + myGrooveData.silentMeasurePercentage;
+
+		// packed as amount,intervalSeconds,keepGoingForever,stepMode
+		if (myGrooveData.autoSpeedUpActive) {
+			fullURL += "&SpeedUp=" + myGrooveData.autoSpeedUpBpm +
+					   "," + myGrooveData.autoSpeedUpIntervalSeconds +
+					   "," + (myGrooveData.autoSpeedUpKeepGoingForever ? 1 : 0) +
+					   "," + (myGrooveData.autoSpeedUpStepMode ? 1 : 0);
 		}
 
 		// notes
