@@ -3653,6 +3653,67 @@ function GrooveWriter() {
 		root.myGrooveUtils.tempoChangeCallback = root.tempoChangeCallback
 	};
 
+	// The interval slider holds a step index rather than a number of minutes.   Steps 1-6 are
+	// 10 second increments up to a minute, and every step above that is a whole minute
+	// (step 7 = 2 min ... step 25 = 20 min).   The fine control belongs down at the short end,
+	// which is where you actually practice;  nobody needs 7 minutes 40 seconds.
+	var constant_AUTO_SPEEDUP_SUB_MINUTE_STEP_SECONDS = 10;
+	var constant_AUTO_SPEEDUP_SUB_MINUTE_STEPS = 6; // 10s, 20s ... 60s
+	var constant_AUTO_SPEEDUP_MAX_STEP = 25;        // 20 min
+
+	root.metronomeAutoSpeedupIntervalSecondsFromSliderValue = function (sliderValue) {
+		var step = parseInt(sliderValue, 10);
+
+		if (isNaN(step) || step < 1)
+			step = constant_AUTO_SPEEDUP_SUB_MINUTE_STEPS; // fall back to one minute
+
+		if (step <= constant_AUTO_SPEEDUP_SUB_MINUTE_STEPS)
+			return step * constant_AUTO_SPEEDUP_SUB_MINUTE_STEP_SECONDS;
+
+		return (step - constant_AUTO_SPEEDUP_SUB_MINUTE_STEPS + 1) * 60;
+	};
+
+	// inverse of the above, used when a shared URL hands us an interval in seconds
+	root.metronomeAutoSpeedupSliderValueFromIntervalSeconds = function (seconds) {
+		var secs = parseInt(seconds, 10);
+		var step;
+
+		if (isNaN(secs) || secs < constant_AUTO_SPEEDUP_SUB_MINUTE_STEP_SECONDS)
+			secs = 60;
+
+		if (secs <= 60)
+			step = Math.round(secs / constant_AUTO_SPEEDUP_SUB_MINUTE_STEP_SECONDS);
+		else
+			step = Math.round(secs / 60) + (constant_AUTO_SPEEDUP_SUB_MINUTE_STEPS - 1);
+
+		return Math.min(Math.max(step, 1), constant_AUTO_SPEEDUP_MAX_STEP);
+	};
+
+	root.metronomeAutoSpeedupIntervalText = function (seconds) {
+		if (seconds < 60)
+			return seconds + " sec";
+
+		return (seconds / 60) + " min";
+	};
+
+	root.getMetronomeAutoSpeedupIntervalSeconds = function () {
+		var slider = document.getElementById("metronomeAutoSpeedupTempoIncreaseInterval");
+
+		if (!slider)
+			return 60;
+
+		return root.metronomeAutoSpeedupIntervalSecondsFromSliderValue(slider.value);
+	};
+
+	// the interval slider needs its own label updater because the units change as it moves
+	root.updateIntervalRangeLabel = function (event) {
+		var element = document.getElementById("metronomeAutoSpeedupTempoIncreaseIntervalOutput");
+
+		if (element)
+			element.innerHTML = root.metronomeAutoSpeedupIntervalText(
+				root.metronomeAutoSpeedupIntervalSecondsFromSliderValue(event.currentTarget.value));
+	};
+
 	// called right before the midi reloads for the next replay
 	// set the new tempo based on the delta required for the time interval
 	var class_our_midi_start_time = null;
@@ -3664,11 +3725,7 @@ function GrooveWriter() {
 		var totalTempoIncreaseAmount = 1;
 		if (document.getElementById("metronomeAutoSpeedupTempoIncreaseAmount"))
 			totalTempoIncreaseAmount = parseInt(document.getElementById("metronomeAutoSpeedupTempoIncreaseAmount").value, 10);
-		var tempoIncreaseInterval = 60;
-		if (document.getElementById("metronomeAutoSpeedupTempoIncreaseInterval")) {
-			tempoIncreaseInterval = parseInt(document.getElementById("metronomeAutoSpeedupTempoIncreaseInterval").value, 10);
-			tempoIncreaseInterval = tempoIncreaseInterval * 60; // turn mins to secs
-		}
+		var tempoIncreaseInterval = root.getMetronomeAutoSpeedupIntervalSeconds();
 
 		var keepIncreasingForever = false;
 		if (document.getElementById("metronomeAutoSpeedUpKeepGoingForever"))
@@ -4122,7 +4179,8 @@ function GrooveWriter() {
 		}
 
 		document.getElementById('metronomeAutoSpeedupTempoIncreaseAmountOutput').innerHTML = document.getElementById('metronomeAutoSpeedupTempoIncreaseAmount').value;
-		document.getElementById('metronomeAutoSpeedupTempoIncreaseIntervalOutput').innerHTML = document.getElementById('metronomeAutoSpeedupTempoIncreaseInterval').value;
+		document.getElementById('metronomeAutoSpeedupTempoIncreaseIntervalOutput').innerHTML =
+			root.metronomeAutoSpeedupIntervalText(root.getMetronomeAutoSpeedupIntervalSeconds());
 	};
 
 	root.close_MetronomeAutoSpeedupConfiguration = function (type) {

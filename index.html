@@ -485,7 +485,7 @@
 		<div id="metronomeAutoSpeedupConfiguration">
 			<div id="metronomeAutoSpeedupOutputText">
 				Increase <span id="metronomeAutoSpeedupTempoIncreaseAmountOutput">10</span> bpm in
-				<span id="metronomeAutoSpeedupTempoIncreaseIntervalOutput">1</span> min
+				<span id="metronomeAutoSpeedupTempoIncreaseIntervalOutput">1 min</span>
 			</div>
 			<div id="metronomeAutoSpeedupConfigurationKeepIncreasing">
 				<input type="checkbox" checked id="metronomeAutoSpeedUpKeepGoingForever"><label for="metronomeAutoSpeedUpKeepGoingForever">Keep increasing after the first interval</label>
@@ -496,8 +496,11 @@
 			<div id="metronomeAutoSpeedupConfigurationSliders">
 				<div id="metronomeAutoSpeedupConfigurationAmountLable">Amount in BPM</div>
 				<input type=range min=1 max=100 value=10 class="metronomeAutoSpeedUpRange" id="metronomeAutoSpeedupTempoIncreaseAmount" oninput="myGrooveWriter.updateRangeLabel(event, 'metronomeAutoSpeedupTempoIncreaseAmountOutput');">
-				<div id="metronomeAutoSpeedupConfigurationIntervalLable">Interval in Minutes</div>
-				<input type=range min=1 max=20 value=1 class="metronomeAutoSpeedUpRange" id="metronomeAutoSpeedupTempoIncreaseInterval" step="1" oninput="myGrooveWriter.updateRangeLabel(event, 'metronomeAutoSpeedupTempoIncreaseIntervalOutput');">
+				<!-- the value here is a step index, not a number of minutes.   Steps 1-6 are
+				     10 second increments up to a minute, after that it goes a minute at a time.
+				     GrooveWriter.metronomeAutoSpeedupIntervalSecondsFromSliderValue() owns the mapping. -->
+				<div id="metronomeAutoSpeedupConfigurationIntervalLable">Interval</div>
+				<input type=range min=1 max=25 value=6 class="metronomeAutoSpeedUpRange" id="metronomeAutoSpeedupTempoIncreaseInterval" step="1" oninput="myGrooveWriter.updateIntervalRangeLabel(event);">
 			</div>
 			<div id="metronomeAutoSpeedupCloseButtonDiv">
 				<button id="metronomeAutoSpeedupConfigurationCloseButton" onclick="myGrooveWriter.close_MetronomeAutoSpeedupConfiguration('ok');">Done</button>
