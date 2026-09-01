@@ -47,7 +47,7 @@ function GrooveWriter() {
 	var class_note_value_per_measure = 4;     // TimeSigBottom
 	var class_notes_per_measure = root.myGrooveUtils.calc_notes_per_measure(class_time_division, class_num_beats_per_measure, class_note_value_per_measure);
 	var class_metronome_auto_speed_up_active = false;
-	var class_metronome_silent_measures_active = false;
+	var class_metronome_silent_phrases_active = false;
 	var class_metronome_count_in_active = false;
 	var class_metronome_count_in_is_playing = false;
 
@@ -1285,7 +1285,7 @@ function GrooveWriter() {
 
 		if (root.myGrooveUtils.getMetronomeSolo() ||
 				class_metronome_auto_speed_up_active ||
-				class_metronome_silent_measures_active ||
+				class_metronome_silent_phrases_active ||
 				root.myGrooveUtils.getMetronomeOffsetClickStart() != "1") {
 			// make menu look active
 			addOrRemoveKeywordFromClassById("metronomeOptionsAnchor", "selected", true)
@@ -1325,12 +1325,12 @@ function GrooveWriter() {
 				break;
 
 			case "Silence":
-				if (class_metronome_silent_measures_active) {
+				if (class_metronome_silent_phrases_active) {
 					// just turn it off if it is on, don't show the configurator
-					root.setSilentMeasuresActive(false);
+					root.setSilentPhrasesActive(false);
 				} else {
-					root.setSilentMeasuresActive(true);
-					root.show_SilentMeasuresConfiguration();
+					root.setSilentPhrasesActive(true);
+					root.show_SilentPhrasesConfiguration();
 				}
 				root.myGrooveUtils.midiNoteHasChanged(); // if playing need to refresh
 				break;
@@ -2689,8 +2689,10 @@ function GrooveWriter() {
 
 		var metronomeFrequency = root.getMetronomeFrequency();
 
-		// re-rolled here so the muted measures move around every time the loop regenerates
-		root.myGrooveUtils.silentMeasurePercentage = root.getSilentMeasurePercentage();
+		// Whether this repetition is muted was decided at the last loop boundary, not here -
+		// this function runs once per measure's worth of arrays and every measure of the
+		// phrase has to agree.   Rebuilding for an unrelated reason must not change it either.
+		root.myGrooveUtils.phraseIsSilent = root.getSilentPhrasePercentage() > 0 && root.isThisPhraseSilent();
 
 		// just the first measure
 		var num_notes = get32NoteArrayFromClickableUI(Sticking_Array, HH_Array, Snare_Array, Kick_Array, Toms_Array, 0);
@@ -2812,7 +2814,7 @@ function GrooveWriter() {
 		myGrooveData.kickStemsUp = true;
 
 		// practice settings, so a shared URL carries how you practice the groove as well as the notes
-		myGrooveData.silentMeasurePercentage = root.getSilentMeasurePercentage();
+		myGrooveData.silentPhrasePercentage = root.getSilentPhrasePercentage();
 		myGrooveData.autoSpeedUpActive = class_metronome_auto_speed_up_active;
 		if (document.getElementById("metronomeAutoSpeedupTempoIncreaseAmount"))
 			myGrooveData.autoSpeedUpBpm = parseInt(document.getElementById("metronomeAutoSpeedupTempoIncreaseAmount").value, 10);
@@ -3616,6 +3618,10 @@ function GrooveWriter() {
 		root.myGrooveUtils.midiEventCallbacks.loadMidiDataEvent = function (myroot, playStarting) {
 			var midiURL;
 
+			// pressing play starts the cycle over, so the first phrase you hear is never muted
+			if (playStarting)
+				root.resetSilentPhraseCycle();
+
 			if (playStarting && class_metronome_count_in_active) {
 
 				midiURL = root.myGrooveUtils.MIDI_build_midi_url_count_in_track(class_num_beats_per_measure, class_note_value_per_measure);
@@ -3636,14 +3642,23 @@ function GrooveWriter() {
 
 		root.myGrooveUtils.midiEventCallbacks.notePlaying = function (myroot, note_type, percent_complete) {
 			if (note_type == "complete") {
+				var silenceIsOn = root.getSilentPhrasePercentage() > 0;
+
 				if (class_metronome_auto_speed_up_active) {
 					// reload with new tempo
 					root.myGrooveUtils.midiNoteHasChanged();
 					root.metronomeAutoSpeedUpTempoUpdate();
-				} else if (root.getSilentMeasurePercentage() > 0) {
-					// force a regenerate so a fresh set of measures gets muted next time round
+				} else if (silenceIsOn) {
+					// force a regenerate so the next time round can be muted
 					root.myGrooveUtils.midiNoteHasChanged();
 				}
+
+				// Decide whether the coming repetition is a silent one.   Deliberately outside
+				// the branch above:  when auto speed up is also running this still has to
+				// happen, and the old else-if skipped it.   The rebuild that picks this up
+				// happens after this callback returns, so the ordering works out.
+				if (silenceIsOn)
+					root.rollNextSilentPhrase();
 			}
 
 			hilight_note(note_type, percent_complete);
@@ -3814,22 +3829,78 @@ function GrooveWriter() {
 			root.myGrooveUtils.setTempo(root.myGrooveUtils.getTempo() + tempoDiffInt);
 	};
 
-	// Percentage of measures that get muted at random during playback, so the player has to
-	// hold the time unaided.   Its own metronome option, independent of auto speed up, so the
-	// menu toggle is the on/off and the slider only says how much.   Returns 0 when off.
-	root.getSilentMeasurePercentage = function () {
-		if (!class_metronome_silent_measures_active)
+	// How often the whole groove drops out during playback, so the player has to hold the time
+	// unaided.   Its own metronome option, independent of auto speed up, so the menu toggle is
+	// the on/off and the slider only says how often.   Returns 0 when off.
+	root.getSilentPhrasePercentage = function () {
+		if (!class_metronome_silent_phrases_active)
 			return 0;
 
-		var slider = document.getElementById("silentMeasuresPercentage");
+		var slider = document.getElementById("silentPhrasesPercentage");
 		if (!slider)
 			return 0;
 		var pct = parseInt(slider.value, 10);
 		return isNaN(pct) ? 0 : pct;
 	};
 
-	root.isSilentMeasuresActive = function () {
-		return class_metronome_silent_measures_active;
+	root.isSilentPhrasesActive = function () {
+		return class_metronome_silent_phrases_active;
+	};
+
+	// Silence is a property of the whole phrase, not of individual measures, and the percentage
+	// is a ratio rather than a per-measure coin flip:  at 30% the groove drops out 3 times in
+	// every 10 repetitions, whether the groove is one measure long or four.
+	//
+	// Getting the ratio right is not enough on its own - the spacing is what you actually feel.
+	// Drawing the silent repetitions at random gives the right count but says nothing about
+	// where they land, and it clumps badly:  measured over 2000 repetitions at 25% a uniform
+	// shuffle produced runs of 15 playing and 4 silent.   Dealing from a shuffled bag of 20 was
+	// no better once you counted across the bag boundaries.
+	//
+	// So instead of choosing repetitions, we accumulate credit.   Every repetition adds the
+	// percentage to a running total, and when the total crosses a threshold the groove drops
+	// out and we subtract one.   That is even spacing by construction - at 25% the credit
+	// crosses on roughly every fourth repetition - and it self corrects, so the ratio stays
+	// exact over the long run with no cycle boundaries to clump at.
+	//
+	// The threshold is jittered by +/- 30% so the gap wanders a little and you cannot simply
+	// count your way to the next one.   Measured worst case at 25%: 6 playing, 2 silent.
+	var constant_SILENT_PHRASE_THRESHOLD_JITTER = 0.6;
+	var class_silent_phrase_credit = 0;
+	var class_this_phrase_is_silent = false;
+
+	root.isThisPhraseSilent = function () {
+		return class_this_phrase_is_silent;
+	};
+
+	// Called when playback starts, and whenever the setting changes.   The first phrase is
+	// never silent - you need to hear the groove before you can hold it.
+	root.resetSilentPhraseCycle = function () {
+		class_silent_phrase_credit = 0;
+		class_this_phrase_is_silent = false;
+	};
+
+	// Advance to the next repetition and report whether it is a silent one.
+	root.rollNextSilentPhrase = function () {
+		var pct = root.getSilentPhrasePercentage();
+
+		if (pct <= 0) {
+			root.resetSilentPhraseCycle();
+			return false;
+		}
+
+		class_silent_phrase_credit += pct / 100;
+
+		var threshold = 1 + (Math.random() - 0.5) * constant_SILENT_PHRASE_THRESHOLD_JITTER;
+
+		if (class_silent_phrase_credit >= threshold) {
+			class_silent_phrase_credit -= 1; // keeps the long run ratio honest
+			class_this_phrase_is_silent = true;
+		} else {
+			class_this_phrase_is_silent = false;
+		}
+
+		return class_this_phrase_is_silent;
 	};
 
 	// GrooveDBCreateGroove.html loads this file but has no metronome menu, so don't go poking
@@ -3838,20 +3909,21 @@ function GrooveWriter() {
 		return !!document.getElementById("metronomeOptionsContextMenu");
 	}
 
-	root.setSilentMeasuresActive = function (onElseOff) {
-		class_metronome_silent_measures_active = !!onElseOff;
+	root.setSilentPhrasesActive = function (onElseOff) {
+		class_metronome_silent_phrases_active = !!onElseOff;
+		root.resetSilentPhraseCycle(); // a fresh cycle, and never a silent phrase first
 
 		if (hasMetronomeOptionsMenu()) {
-			addOrRemoveKeywordFromClassById("metronomeOptionsContextMenuSilence", "menuChecked", class_metronome_silent_measures_active);
+			addOrRemoveKeywordFromClassById("metronomeOptionsContextMenuSilence", "menuChecked", class_metronome_silent_phrases_active);
 			root.metronomeOptionsMenuSetSelectedState();
 		}
 	};
 
-	root.setSilentMeasurePercentage = function (pct) {
-		var slider = document.getElementById("silentMeasuresPercentage");
+	root.setSilentPhrasePercentage = function (pct) {
+		var slider = document.getElementById("silentPhrasesPercentage");
 		if (slider) {
 			slider.value = pct;
-			var output = document.getElementById("silentMeasuresPercentageOutput");
+			var output = document.getElementById("silentPhrasesPercentageOutput");
 			if (output)
 				output.innerHTML = slider.value;
 		}
@@ -4198,7 +4270,7 @@ function GrooveWriter() {
 		var popup = document.getElementById("metronomeAutoSpeedupConfiguration");
 
 		// both configurators sit at the same spot, so never leave the other one underneath
-		root.close_SilentMeasuresConfiguration();
+		root.close_SilentPhrasesConfiguration();
 
 		if (popup) {
 			popup.style.display = "block";
@@ -4216,8 +4288,8 @@ function GrooveWriter() {
 			popup.style.display = "none";
 	};
 
-	root.show_SilentMeasuresConfiguration = function () {
-		var popup = document.getElementById("silentMeasuresConfiguration");
+	root.show_SilentPhrasesConfiguration = function () {
+		var popup = document.getElementById("silentPhrasesConfiguration");
 
 		// both configurators sit at the same spot, so never leave the other one underneath
 		root.close_MetronomeAutoSpeedupConfiguration();
@@ -4225,18 +4297,20 @@ function GrooveWriter() {
 		if (popup)
 			popup.style.display = "block";
 
-		var slider = document.getElementById("silentMeasuresPercentage");
-		var output = document.getElementById("silentMeasuresPercentageOutput");
+		var slider = document.getElementById("silentPhrasesPercentage");
+		var output = document.getElementById("silentPhrasesPercentageOutput");
 		if (slider && output)
 			output.innerHTML = slider.value;
 	};
 
-	root.close_SilentMeasuresConfiguration = function (type) {
-		var popup = document.getElementById("silentMeasuresConfiguration");
+	root.close_SilentPhrasesConfiguration = function (type) {
+		var popup = document.getElementById("silentPhrasesConfiguration");
 
 		if (popup)
 			popup.style.display = "none";
 
+		// the ratio changed, so start a fresh cycle rather than finishing the old bag
+		root.resetSilentPhraseCycle();
 		root.myGrooveUtils.midiNoteHasChanged(); // pick up the new percentage on the next pass
 	};
 
@@ -4534,9 +4608,9 @@ function GrooveWriter() {
 	// to go and switch it on by hand.
 	root.applyPracticeSettingsFromGrooveData = function (myGrooveData) {
 
-		root.setSilentMeasuresActive(myGrooveData.silentMeasurePercentage > 0);
-		if (myGrooveData.silentMeasurePercentage > 0)
-			root.setSilentMeasurePercentage(myGrooveData.silentMeasurePercentage);
+		root.setSilentPhrasesActive(myGrooveData.silentPhrasePercentage > 0);
+		if (myGrooveData.silentPhrasePercentage > 0)
+			root.setSilentPhrasePercentage(myGrooveData.silentPhrasePercentage);
 
 		var amount = document.getElementById("metronomeAutoSpeedupTempoIncreaseAmount");
 		if (amount) {

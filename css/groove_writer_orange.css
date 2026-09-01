@@ -1111,7 +1111,7 @@
 		padding: 8px 22px;
 		cursor: pointer;
 	}
-	#fullURLPopup, #metronomeAutoSpeedupConfiguration, #silentMeasuresConfiguration, #timeSigPopup {
+	#fullURLPopup, #metronomeAutoSpeedupConfiguration, #silentPhrasesConfiguration, #timeSigPopup {
 		/visibility: hidden;
 		display: none;
 		position:absolute; left:300px; top:250px; z-index:999;
@@ -1246,26 +1246,26 @@
 	.metronomeAutoSpeedupInputRow {
 		vertical-align: text-bottom;
 	}
-	#metronomeAutoSpeedupConfigurationSliders, #silentMeasuresConfigurationSliders {
+	#metronomeAutoSpeedupConfigurationSliders, #silentPhrasesConfigurationSliders {
 		width: 370px;
 		margin: 0px auto;
 	}
 	#metronomeAutoSpeedupTempoIncreaseAmount, #metronomeAutoSpeedupTempoIncreaseInterval,
-	#silentMeasuresPercentage {
+	#silentPhrasesPercentage {
 		background: var(--highlight-color);
 		width: 365px;
 	}
-	#metronomeAutoSpeedupOutputText, #silentMeasuresOutputText {
+	#metronomeAutoSpeedupOutputText, #silentPhrasesOutputText {
 		font-size: 25px;
 		text-align: center;
 	}
 	#metronomeAutoSpeedupTempoIncreaseAmountOutput, #metronomeAutoSpeedupTempoIncreaseIntervalOutput,
-	#silentMeasuresPercentageOutput {
+	#silentPhrasesPercentageOutput {
 		color: var(--highlight-color);
 		font-weight: 700;
 	}
 	#metronomeAutoSpeedupConfigurationAmountLable, #metronomeAutoSpeedupConfigurationIntervalLable,
-	#silentMeasuresConfigurationLable {
+	#silentPhrasesConfigurationLable {
 		font-size: 12px;
 	}
 	#metronomeAutoSpeedupConfigurationKeepIncreasing {
@@ -1275,11 +1275,11 @@
 		vertical-align: middle;
 		margin-bottom: 10px;
 	}
-	#metronomeAutoSpeedupCloseButtonDiv, #silentMeasuresCloseButtonDiv {
+	#metronomeAutoSpeedupCloseButtonDiv, #silentPhrasesCloseButtonDiv {
 		text-align: center;
 		margin-top: 15px;
 	}
-	#metronomeAutoSpeedupConfigurationCloseButton, #silentMeasuresConfigurationCloseButton {
+	#metronomeAutoSpeedupConfigurationCloseButton, #silentPhrasesConfigurationCloseButton {
 		font-size: 16px;
 		font-weight: 500;
 		background: var(--highlight-color);

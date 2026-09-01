@@ -152,8 +152,9 @@ function GrooveUtils() {
 
 	// metronome options
 	root.metronomeSolo = false;
-	// 0 - 100.   Percentage of measures muted at random during playback (practice aid).
-	root.silentMeasurePercentage = 0;
+	// Set by the caller before each track is built: true means this time round the whole
+	// groove is muted (practice aid).   See GrooveWriter.rollNextSilentPhrase().
+	root.phraseIsSilent = false;
 	root.metronomeOffsetClickStart = "1";
   // start with last in the rotation so the next rotation brings it to '1'
 	root.metronomeOffsetClickStartRotation = 0;
@@ -194,7 +195,7 @@ function GrooveUtils() {
 		this.metronomeFrequency = 0; // 0, 4, 8, 16
 		// practice settings.   These ride along in the URL so a groove can be shared or
 		// bookmarked with the way you practice it, not just the notes.
-		this.silentMeasurePercentage = 0;    // 0 == silent measures off
+		this.silentPhrasePercentage = 0;    // 0 == silent phrases off
 		this.autoSpeedUpActive = false;
 		this.autoSpeedUpBpm = 10;            // how much to climb
 		this.autoSpeedUpIntervalSeconds = 60; // how long to take doing it
@@ -1009,7 +1010,7 @@ function GrooveUtils() {
 		var silencePct = parseInt(root.getQueryVariableFromString("Silence", "0", encodedURLData), 10);
 		if (isNaN(silencePct) || silencePct < 0)
 			silencePct = 0;
-		myGrooveData.silentMeasurePercentage = Math.min(silencePct, 90);
+		myGrooveData.silentPhrasePercentage = Math.min(silencePct, 90);
 
 		// packed as amount,intervalSeconds,keepGoingForever,stepMode.   Anything missing or
 		// unparseable falls back to the field's default rather than throwing the lot away.
@@ -1170,8 +1171,8 @@ function GrooveUtils() {
 
 		// Practice settings.   Only written when they are actually switched on, so an ordinary
 		// groove URL is no longer than it was before.
-		if (myGrooveData.silentMeasurePercentage > 0)
-			fullURL += "&Silence=" + myGrooveData.silentMeasurePercentage;
+		if (myGrooveData.silentPhrasePercentage > 0)
+			fullURL += "&Silence=" + myGrooveData.silentPhrasePercentage;
 
 		// packed as amount,intervalSeconds,keepGoingForever,stepMode
 		if (myGrooveData.autoSpeedUpActive) {
@@ -2532,26 +2533,17 @@ function GrooveUtils() {
     var offsetClickStartBeat = root.getMetronomeOptionsOffsetClickStartRotation(isTriplets);
     var delay_for_next_note = 0;
 
-		// Silent measure practice mode.   Mute whole measures at random -- drums and metronome
-		// both -- so the player has to hold the time unaided.   The measures are picked fresh
-		// every time the MIDI is generated, so they move around as the groove loops.
-		var notesPerMeasureFullSize = root.notesPerMeasureInFullSizeArray(isTriplets, timeSigTop, timeSigBottom);
-		var silentMeasures = {};
-		if (root.silentMeasurePercentage > 0 && notesPerMeasureFullSize > 0) {
-			var numMeasuresInGroove = Math.ceil(num_notes / notesPerMeasureFullSize);
-			for (var silent_m = 0; silent_m < numMeasuresInGroove; silent_m++) {
-				if (Math.random() * 100 < root.silentMeasurePercentage)
-					silentMeasures[silent_m] = true;
-			}
-		}
+		// Silent phrase practice mode.   The whole groove drops out -- drums and metronome both
+		// -- for a repetition at a time, so the player has to hold the time unaided.   Whether
+		// this time round is silent is decided by the caller before the track is built, because
+		// this function is called once per measure and every measure of a phrase has to agree.
+		// GrooveWriter.rollNextSilentPhrase() owns the choice.
+		var thisPhraseIsSilent = (root.phraseIsSilent === true);
 
 		for (var i = 0; i < num_notes; i++) {
 
-			var thisMeasureIsSilent = (notesPerMeasureFullSize > 0) &&
-				(silentMeasures[Math.floor(i / notesPerMeasureFullSize)] === true);
-
 			// an open hi-hat ringing out of the previous measure would break the silence
-			if (thisMeasureIsSilent && prev_hh_note !== false) {
+			if (thisPhraseIsSilent && prev_hh_note !== false) {
 				midiTrack.addNoteOff(midi_channel, prev_hh_note, delay_for_next_note);
 				prev_hh_note = false;
 				delay_for_next_note = 0;
@@ -2593,7 +2585,7 @@ function GrooveUtils() {
 			// of the gap that precedes the slot, which leaves the main note (and every other
 			// instrument in the slot) landing exactly on the beat.
 			var flam_grace_notes = [];
-			if (!root.metronomeSolo && !thisMeasureIsSilent && Toms_Array) {
+			if (!root.metronomeSolo && !thisPhraseIsSilent && Toms_Array) {
 				for (var flam_array = 0; flam_array < constant_NUMBER_OF_TOMS; flam_array++) {
 					if (Toms_Array[flam_array] && Toms_Array[flam_array][i] !== undefined) {
 						var grace_note = tomFlamGraceMIDINote(Toms_Array[flam_array][i]);
@@ -2627,7 +2619,7 @@ function GrooveUtils() {
 			// Metronome sounds.
 			var metronome_note = false;
 			var metronome_velocity = constant_OUR_MIDI_VELOCITY_ACCENT;
-			if (metronome_frequency > 0 && !thisMeasureIsSilent) {
+			if (metronome_frequency > 0 && !thisPhraseIsSilent) {
 				var quarterNoteFrequency = (isTriplets ? 12 : 8);
 				var eighthNoteFrequency = (isTriplets ? 6 : 4);
 				var sixteenthNoteFrequency = (isTriplets ? 2 : 2);
@@ -2705,7 +2697,7 @@ function GrooveUtils() {
 				}
 			}
 
-			if (!root.metronomeSolo && !thisMeasureIsSilent) { // midiSolo means to play just the metronome
+			if (!root.metronomeSolo && !thisPhraseIsSilent) { // midiSolo means to play just the metronome
 				var hh_velocity = constant_OUR_MIDI_VELOCITY_NORMAL;
 				var hh_note = false;
 				switch (HH_Array[i]) {
@@ -2913,7 +2905,7 @@ function GrooveUtils() {
 			// its tracking callback.   Deliberately NOT a note on: only note ons advance the
 			// highlighted note on the staff, and the whole point of a silent measure is that
 			// you keep your place by feel rather than by reading it off the screen.
-			if (thisMeasureIsSilent) {
+			if (thisPhraseIsSilent) {
 				midiTrack.addNoteOff(midi_channel, constant_OUR_MIDI_SILENT_TICK, delay_for_next_note);
 				delay_for_next_note = 0; // zero the delay
 			}

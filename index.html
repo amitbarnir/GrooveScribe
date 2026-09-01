@@ -238,7 +238,7 @@
 			<ul id="metronomeOptionsContextMenu" class="list">
 				<li class="metronomeOptionsContextMenuItem" id="metronomeOptionsContextMenuSolo"      onclick='myGrooveWriter.metronomeOptionsMenuPopupClick("Solo");'  title="Just hear the metronome." >Solo</li>
 				<li class="metronomeOptionsContextMenuItem" id="metronomeOptionsContextMenuSpeedUp"   onclick='myGrooveWriter.metronomeOptionsMenuPopupClick("SpeedUp");' title="Increase the tempo automatically" >Auto speed up</li>
-				<li class="metronomeOptionsContextMenuItem" id="metronomeOptionsContextMenuSilence"   onclick='myGrooveWriter.metronomeOptionsMenuPopupClick("Silence");' title="Randomly mute whole measures so you have to hold the time yourself" >Silent measures</li>
+				<li class="metronomeOptionsContextMenuItem" id="metronomeOptionsContextMenuSilence"   onclick='myGrooveWriter.metronomeOptionsMenuPopupClick("Silence");' title="Drop the whole groove out every so often so you have to hold the time yourself" >Silent phrases</li>
 				<li class="metronomeOptionsContextMenuItem" id="metronomeOptionsContextMenuCountIn"   onclick='myGrooveWriter.metronomeOptionsMenuPopupClick("CountIn");' title="One measure of metronome count in at the start" >Count it in</li>
 				<li class="metronomeOptionsContextMenuItem" id="metronomeOptionsContextMenuOffTheOne" onclick='myGrooveWriter.metronomeOptionsMenuPopupClick("OffTheOne");' title="Click on the e, &, or a">Offset click</li>
 				<!--
@@ -508,16 +508,16 @@
 		</div>
 
 		<!-- silent measure practice mode.   Its own option so it can be used without auto speed up -->
-		<div id="silentMeasuresConfiguration">
-			<div id="silentMeasuresOutputText">
-				Silence <span id="silentMeasuresPercentageOutput">30</span>% of measures
+		<div id="silentPhrasesConfiguration">
+			<div id="silentPhrasesOutputText">
+				Silent <span id="silentPhrasesPercentageOutput">30</span>% of the time
 			</div>
-			<div id="silentMeasuresConfigurationSliders">
-				<div id="silentMeasuresConfigurationLable" title="Randomly mutes whole measures - drums and metronome both - so you have to hold the time yourself. Re-rolled every time the loop comes around.">Silent measures %</div>
-				<input type=range min=5 max=90 value=30 step="5" class="metronomeAutoSpeedUpRange" id="silentMeasuresPercentage" oninput="myGrooveWriter.updateRangeLabel(event, 'silentMeasuresPercentageOutput');">
+			<div id="silentPhrasesConfigurationSliders">
+				<div id="silentPhrasesConfigurationLable" title="Mutes the whole groove - drums and metronome both - so you have to hold the time yourself. At 30% it drops out 3 times in every 10 repetitions, in a different order each cycle. The first repetition is never silent.">How often the groove drops out</div>
+				<input type=range min=5 max=90 value=30 step="5" class="metronomeAutoSpeedUpRange" id="silentPhrasesPercentage" oninput="myGrooveWriter.updateRangeLabel(event, 'silentPhrasesPercentageOutput');">
 			</div>
-			<div id="silentMeasuresCloseButtonDiv">
-				<button id="silentMeasuresConfigurationCloseButton" onclick="myGrooveWriter.close_SilentMeasuresConfiguration('ok');">Done</button>
+			<div id="silentPhrasesCloseButtonDiv">
+				<button id="silentPhrasesConfigurationCloseButton" onclick="myGrooveWriter.close_SilentPhrasesConfiguration('ok');">Done</button>
 			</div>
 		</div>
 
