@@ -85,6 +85,11 @@ var constant_OUR_MIDI_FLAM_GRACE_TICKS = 4;
 // Same idea for the one-off preview click when you set a note, where there is no tempo to
 // scale against, so it is just a fixed number of seconds.
 var constant_OUR_MIDI_FLAM_GRACE_PREVIEW_SECONDS = 0.045;
+// A note that no instrument uses, so a note off on it makes no sound.   The same number the
+// track already uses as a spacer.   We emit these through silent measures purely so the MIDI
+// player keeps calling back and the clock and progress bar keep moving.   See
+// MIDI_from_HH_Snare_Kick_Arrays.
+var constant_OUR_MIDI_SILENT_TICK = 60;
 var constant_OUR_MIDI_METRONOME_1 = 76;
 var constant_OUR_MIDI_METRONOME_NORMAL = 77;
 var constant_OUR_MIDI_HIHAT_NORMAL = 42;
@@ -2853,6 +2858,19 @@ function GrooveUtils() {
 				}
 
 			} // end metronomeSolo
+
+			// A silent measure emits no notes at all, which means the MIDI player has no events
+			// to hand back and the play clock, the progress bar and the time counter all freeze
+			// until the sound comes back.   Emit an inaudible note off on each slot so the
+			// transport keeps ticking.   It is a note off on an unused note, so MIDI.noteOff
+			// finds no source and returns without making a sound, but the player still fires
+			// its tracking callback.   Deliberately NOT a note on: only note ons advance the
+			// highlighted note on the staff, and the whole point of a silent measure is that
+			// you keep your place by feel rather than by reading it off the screen.
+			if (thisMeasureIsSilent) {
+				midiTrack.addNoteOff(midi_channel, constant_OUR_MIDI_SILENT_TICK, delay_for_next_note);
+				delay_for_next_note = 0; // zero the delay
+			}
 
 			delay_for_next_note += duration;
 		}
