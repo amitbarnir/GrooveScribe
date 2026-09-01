@@ -6,10 +6,22 @@
 
 /*global window, document, localStorage */
 
-var GS_APP_VERSION = "1.04";
+var GS_APP_VERSION = "1.05";
 
 // Newest first.   "changes" is a plain list of strings.
 var GS_CHANGELOG = [
+	{
+		version: "1.05",
+		date: "2026-09-01",
+		changes: [
+			"Silent measures is now its own option in the metronome menu, so you can practice holding time without also having to turn on Auto speed up.",
+			"Auto speed up can now step in 10 second increments up to a minute, then a minute at a time - useful for short bursts where a whole minute at one tempo is too long.",
+			"Fixed: the play clock and progress bar froze during a silent measure.   They keep running now.   The note highlight still stops, on purpose, so you have to keep your place by feel.",
+			"Silent measures and Auto speed up settings are now saved into the share URL, so you can bookmark or send a groove along with the way you practice it.",
+			"Fixed: adding or changing a note while the groove was playing fired a preview hit in the middle of the bar.   Edits are silent during playback now and you hear them when the phrase comes back around.",
+			"Fixed: the remove measure button could ignore clicks near its right hand edge, where the next measure was overlapping it."
+		]
+	},
 	{
 		version: "1.04",
 		date: "2026-08-17",
