@@ -865,5 +865,43 @@ check("about 6 of the following 20 are silent (saw " + silentInTwenty + ")",
 check("every entry is a clean yes or no", /^[#.]+$/.test(timeline), true);
 gw.setSilentPhrasesActive(false);
 
+// ---------------------------------------------------------------- hi-hat to ride conversion
+section("hi-hat label menu converts hi-hats to ride");
+
+// set up measure 1 with a mix of hi-hat sounds plus a rest
+gw.noteRightClick({ preventDefault: function () {} }, "hh", 0);
+gw.notePopupClick("hh", "normal");
+gw.noteRightClick({ preventDefault: function () {} }, "hh", 1);
+gw.notePopupClick("hh", "open");
+gw.noteRightClick({ preventDefault: function () {} }, "hh", 2);
+gw.notePopupClick("hh", "accent");
+gw.noteRightClick({ preventDefault: function () {} }, "hh", 3);
+gw.notePopupClick("hh", "off");
+
+var hhBefore = gw.grooveDataFromClickableUI().hh_array;
+check("setup: three hits land on the grid",
+	  hhBefore[0] === constant_ABC_HH_Normal &&
+	  hhBefore[1] === constant_ABC_HH_Open &&
+	  hhBefore[2] === constant_ABC_HH_Accent, true);
+check("setup: the rest is a rest", hhBefore[3], false);
+
+// the teacher's request: label click -> context menu -> convert to ride
+gw.noteLabelClick({ clientX: 0, clientY: 0, preventDefault: function () {} }, "hh", 1);
+gw.noteLabelPopupClick("hh", "all_ride");
+
+var hhAfter = gw.grooveDataFromClickableUI().hh_array;
+check("normal hi-hat becomes ride", hhAfter[0], constant_ABC_HH_Ride);
+check("open hi-hat becomes ride", hhAfter[1], constant_ABC_HH_Ride);
+check("accented hi-hat becomes ride", hhAfter[2], constant_ABC_HH_Ride);
+check("the rest stays a rest", hhAfter[3], false);
+
+// converting twice is a no-op, and other instruments are untouched
+var snareBefore = gw.grooveDataFromClickableUI().snare_array[0];
+gw.noteLabelClick({ clientX: 0, clientY: 0, preventDefault: function () {} }, "hh", 1);
+gw.noteLabelPopupClick("hh", "all_ride");
+var hhTwice = gw.grooveDataFromClickableUI().hh_array;
+check("already-ride notes stay ride", hhTwice[0], constant_ABC_HH_Ride);
+check("snare is untouched", gw.grooveDataFromClickableUI().snare_array[0], snareBefore);
+
 print("");
 print(failures === 0 ? "ALL PASS (including wiring)" : failures + " FAILURE(S)");

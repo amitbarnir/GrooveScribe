@@ -1652,6 +1652,11 @@ function GrooveWriter() {
 			} else if (instrument == "hh" && action == "upbeats") {
 				set_hh_state(i, (i % 2 === 0 ? "off" : "normal"), i == (startIndex + 1));
 
+			} else if (instrument == "hh" && action == "all_ride") {
+				// convert every hi-hat hit in the measure to ride; rests stay rests
+				if (is_hh_on(i))
+					set_hh_state(i, "ride", i == startIndex);
+
 			} else if (instrument == "snare" && action == "all_on") {
 				set_snare_state(i, "accent", i == startIndex);
 
