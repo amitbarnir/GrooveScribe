@@ -168,6 +168,8 @@ check("displayed amount text says 10", /metronomeAutoSpeedupTempoIncreaseAmountO
 check("displayed interval text says 1 min", /metronomeAutoSpeedupTempoIncreaseIntervalOutput">1 min</.test(indexHTML), true);
 check("step mode checkbox exists and is on by default",
 	  /<input type="checkbox" id="metronomeAutoSpeedUpStepMode" checked>/.test(indexHTML), true);
+check("step mode defaults on in a fresh groove",
+	  new gw.myGrooveUtils.grooveDataNew().autoSpeedUpStepMode, true);
 
 // ---------------------------------------------------------------- interval slider mapping
 section("auto speed up: interval slider steps in 10s up to a minute, then in minutes");
@@ -849,7 +851,7 @@ gw.notePopupClick("hh", "off");
 var hhMenu = /id="hhLabelContextMenu"[^>]*>([\s\S]*?)<\/ul>/.exec(indexHTML)[1];
 var hhItems = hhMenu.match(/<li/g).length;
 var ridePosition = hhMenu.split('id="hh_to_ride_menu_item"')[0].match(/<li/g).length;
-check("to ride is the fifth of " + hhItems + " items", ridePosition, 5);
+check("to ride is the first of " + hhItems + " items", ridePosition, 1);
 
 // a mixed measure offers "to ride"
 gw.noteLabelClick({ clientX: 0, clientY: 0, preventDefault: function () {} }, "hh", 1);
@@ -865,8 +867,8 @@ check("the rest stays a rest", hhAfter[3], false);
 
 // now everything is ride, so the same item offers "to hihat" and converts back
 gw.noteLabelClick({ clientX: 0, clientY: 0, preventDefault: function () {} }, "hh", 1);
-check("menu item reads 'to hihat' when everything is ride",
-	  made.hh_to_ride_menu_item.innerHTML, "to hihat");
+check("menu item reads 'to hi-hat' when everything is ride",
+	  made.hh_to_ride_menu_item.innerHTML, "to hi-hat");
 gw.noteLabelPopupClick("hh", "all_ride");
 
 var hhBack = gw.grooveDataFromClickableUI().hh_array;

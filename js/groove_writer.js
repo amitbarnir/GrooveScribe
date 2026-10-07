@@ -1564,7 +1564,7 @@ function GrooveWriter() {
 							if (rideState !== "r") { rideAllRide = false; break; }
 						}
 					}
-					rideItem.innerHTML = (rideAnyOn && rideAllRide) ? "to hihat" : "to ride";
+					rideItem.innerHTML = (rideAnyOn && rideAllRide) ? "to hi-hat" : "to ride";
 				}
 				break;
 			case "tom1":
