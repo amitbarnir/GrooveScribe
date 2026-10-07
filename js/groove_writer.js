@@ -4666,12 +4666,12 @@ function GrooveWriter() {
 		var stepMode = document.getElementById("metronomeAutoSpeedUpStepMode");
 		if (stepMode) {
 			// a step mode stated explicitly in a shared URL wins for that load;  otherwise
-			// the user's stored preference applies, defaulting to off
+			// the user's stored preference applies, defaulting to on
 			if (myGrooveData.autoSpeedUpStepModeFromURL)
 				stepMode.checked = myGrooveData.autoSpeedUpStepMode;
 			else {
-				try { stepMode.checked = (localStorage.getItem("groovescribe.autoSpeedUpStepMode") === "1"); }
-				catch (e) { stepMode.checked = false; }
+				try { stepMode.checked = (localStorage.getItem("groovescribe.autoSpeedUpStepMode") !== "0"); }
+				catch (e) { stepMode.checked = true; }
 			}
 		}
 

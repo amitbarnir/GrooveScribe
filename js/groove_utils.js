@@ -200,7 +200,7 @@ function GrooveUtils() {
 		this.autoSpeedUpBpm = 10;            // how much to climb
 		this.autoSpeedUpIntervalSeconds = 60; // how long to take doing it
 		this.autoSpeedUpKeepGoingForever = true;
-		this.autoSpeedUpStepMode = false;    // jump the whole amount at once instead of ramping
+		this.autoSpeedUpStepMode = true;     // jump the whole amount at once instead of ramping
 		this.autoSpeedUpStepModeFromURL = false; // transient: a shared URL stated it explicitly
 		this.debugMode = root.debugMode;
 		this.grooveDBAuthoring = root.grooveDBAuthoring;

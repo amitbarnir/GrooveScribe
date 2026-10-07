@@ -166,10 +166,10 @@ check("interval slider default is step 6", intervalDefault && intervalDefault[1]
 check("  which is one minute", gw.metronomeAutoSpeedupIntervalSecondsFromSliderValue(intervalDefault[1]), 60);
 check("displayed amount text says 10", /metronomeAutoSpeedupTempoIncreaseAmountOutput">10</.test(indexHTML), true);
 check("displayed interval text says 1 min", /metronomeAutoSpeedupTempoIncreaseIntervalOutput">1 min</.test(indexHTML), true);
-check("step mode checkbox exists and is off by default",
-	  /<input type="checkbox" id="metronomeAutoSpeedUpStepMode"(?![^>]*checked)[^>]*>/.test(indexHTML), true);
-check("step mode defaults off in a fresh groove",
-	  new gw.myGrooveUtils.grooveDataNew().autoSpeedUpStepMode, false);
+check("step mode checkbox exists and is on by default",
+	  /id="metronomeAutoSpeedUpStepMode"[^>]*\bchecked\b/.test(indexHTML), true);
+check("step mode defaults on in a fresh groove",
+	  new gw.myGrooveUtils.grooveDataNew().autoSpeedUpStepMode, true);
 
 // ---------------------------------------------------------------- interval slider mapping
 section("auto speed up: interval slider steps in 10s up to a minute, then in minutes");
@@ -713,19 +713,20 @@ check("every slider interval survives the URL, seconds included", everyIntervalS
 section("step up all at once persists per user, not per song");
 
 storage = {}; // a fresh device: nothing stored yet
-check("fresh device: checkbox starts unchecked", made.metronomeAutoSpeedUpStepMode.checked, false);
+made.metronomeAutoSpeedUpStepMode.checked = false; // simulate a blank load
+gw.applyPracticeSettingsFromGrooveData(new gu.grooveDataNew());
+check("fresh device: checkbox starts checked", made.metronomeAutoSpeedUpStepMode.checked, true);
+made.metronomeAutoSpeedUpStepMode.checked = false;
+gw.saveAutoSpeedUpStepMode();
+check("unticking it stores the preference on the device",
+	  storage["groovescribe.autoSpeedUpStepMode"], "0");
+gw.applyPracticeSettingsFromGrooveData(new gu.grooveDataNew());
+check("a later load restores it unchecked", made.metronomeAutoSpeedUpStepMode.checked, false);
 made.metronomeAutoSpeedUpStepMode.checked = true;
 gw.saveAutoSpeedUpStepMode();
-check("ticking it stores the preference on the device",
-	  storage["groovescribe.autoSpeedUpStepMode"], "1");
-made.metronomeAutoSpeedUpStepMode.checked = false;
+check("ticking it stores the preference", storage["groovescribe.autoSpeedUpStepMode"], "1");
 gw.applyPracticeSettingsFromGrooveData(new gu.grooveDataNew());
-check("a later load restores it checked", made.metronomeAutoSpeedUpStepMode.checked, true);
-made.metronomeAutoSpeedUpStepMode.checked = false;
-gw.saveAutoSpeedUpStepMode();
-check("unticking it stores the preference", storage["groovescribe.autoSpeedUpStepMode"], "0");
-gw.applyPracticeSettingsFromGrooveData(new gu.grooveDataNew());
-check("and a later load restores it unchecked", made.metronomeAutoSpeedUpStepMode.checked, false);
+check("and a later load restores it checked", made.metronomeAutoSpeedUpStepMode.checked, true);
 
 // but a step mode stated explicitly in a shared URL wins for that load
 storage["groovescribe.autoSpeedUpStepMode"] = "1";
