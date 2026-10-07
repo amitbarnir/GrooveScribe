@@ -61,6 +61,7 @@ function GrooveWriter() {
 	var class_advancedEditIsOn = false;
 	var class_measure_for_note_label_click = 0;
 	var class_which_index_last_clicked = 0; // which note was last clicked for the context menu
+	var class_snare_upbeat_ghosts = false; // option: clicked snare notes on upbeats become ghosts
 
 	// local constants
 	var constant_default_tempo = 80;
@@ -1550,6 +1551,21 @@ function GrooveWriter() {
 				break;
 			case "hh":
 				contextMenu = document.getElementById("hhLabelContextMenu");
+				// the ride conversion item toggles: "to ride", unless every hi-hat hit
+				// in the measure is already ride, in which case it offers "to hihat"
+				var rideItem = document.getElementById("hh_to_ride_menu_item");
+				if (rideItem) {
+					var rideStart = class_notes_per_measure * (measure - 1);
+					var rideAllRide = true, rideAnyOn = false;
+					for (var ri = rideStart; ri - rideStart < class_notes_per_measure; ri++) {
+						var rideState = get_hh_state(ri, "URL");
+						if (rideState !== "-") {
+							rideAnyOn = true;
+							if (rideState !== "r") { rideAllRide = false; break; }
+						}
+					}
+					rideItem.innerHTML = (rideAnyOn && rideAllRide) ? "to hihat" : "to ride";
+				}
 				break;
 			case "tom1":
 				contextMenu = document.getElementById("tom1LabelContextMenu");
@@ -1620,10 +1636,35 @@ function GrooveWriter() {
 			return false;
 		}
 
+		if (action == "upbeat_ghosts" && instrument == "snare") {
+			// option toggle: clicked snare notes on upbeats become ghost notes
+			class_snare_upbeat_ghosts = !class_snare_upbeat_ghosts;
+			addOrRemoveKeywordFromClassById("snare_upbeat_ghosts_menu_item", "menuChecked", class_snare_upbeat_ghosts);
+			class_measure_for_note_label_click = 0; // reset
+			return false;
+		}
+
 		// start at the first note of the measure we want to effect.   Only fill in the
 		// notes for that measure
 		// the last boolean in the setFunction should only be true on the first call (plays a sound)
 		var startIndex = class_notes_per_measure * (class_measure_for_note_label_click - 1);
+
+		// the ride menu item toggles: if every hi-hat hit in the measure is already
+		// ride, convert them back to normal hi-hats instead
+		var hhToHihat = false;
+		if (instrument == "hh" && action == "all_ride") {
+			hhToHihat = true;
+			var hhAnyOn = false;
+			for (var h = startIndex; h - startIndex < class_notes_per_measure; h++) {
+				var hhState = get_hh_state(h, "URL");
+				if (hhState !== "-") {
+					hhAnyOn = true;
+					if (hhState !== "r") { hhToHihat = false; break; }
+				}
+			}
+			if (!hhAnyOn) hhToHihat = false;
+		}
+
 		for (var i = startIndex; i - startIndex < class_notes_per_measure; i++) {
 			if (action == "all_off") {
 				setFunction(i, "off", i == startIndex);
@@ -1653,9 +1694,14 @@ function GrooveWriter() {
 				set_hh_state(i, (i % 2 === 0 ? "off" : "normal"), i == (startIndex + 1));
 
 			} else if (instrument == "hh" && action == "all_ride") {
-				// convert every hi-hat hit in the measure to ride; rests stay rests
-				if (is_hh_on(i))
+				// convert every hi-hat hit in the measure to ride - or back to normal
+				// hats when the whole measure is already ride (the menu item toggles)
+				if (hhToHihat) {
+					if (get_hh_state(i, "URL") === "r")
+						set_hh_state(i, "normal", i == startIndex);
+				} else if (is_hh_on(i)) {
 					set_hh_state(i, "ride", i == startIndex);
+				}
 
 			} else if (instrument == "snare" && action == "all_on") {
 				set_snare_state(i, "accent", i == startIndex);
@@ -1665,9 +1711,6 @@ function GrooveWriter() {
 
 			} else if (instrument == "snare" && action == "all_on_ghost") {
 				set_snare_state(i, "ghost", i == startIndex);
-
-			} else if (instrument == "snare" && action == "upbeats") {
-				set_snare_state(i, (i % 2 === 0 ? "off" : "ghost"), i == (startIndex + 1));
 
 			} else if (instrument == "kick" && action == "hh_foot_nums_on") {
 				var num_notes_per_count = class_time_division / class_note_value_per_measure
@@ -1767,7 +1810,7 @@ function GrooveWriter() {
 					set_hh_state(id, is_hh_on(id) ? "off" : "normal", true);
 					break;
 				case "snare":
-					set_snare_state(id, is_snare_on(id) ? "off" : "accent", true);
+					set_snare_state(id, is_snare_on(id) ? "off" : (class_snare_upbeat_ghosts && id % 2 === 1 ? "ghost" : "accent"), true);
 					break;
 				case "tom1":
 					set_tom_state(id, 1, is_tom_on(id, 1) ? "off" : "normal", true);

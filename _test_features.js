@@ -832,8 +832,8 @@ check("6 of the following 20 are silent (saw " + silentInTwenty + ")",
 check("every entry is a clean yes or no", /^[#.]+$/.test(timeline), true);
 gw.setSilentPhrasesActive(false);
 
-// ---------------------------------------------------------------- hi-hat to ride conversion
-section("hi-hat label menu converts hi-hats to ride");
+// ---------------------------------------------------------------- hi-hat to ride toggle
+section("hi-hat label menu toggles ride / hihat");
 
 // set up measure 1 with a mix of hi-hat sounds plus a rest
 gw.noteRightClick({ preventDefault: function () {} }, "hh", 0);
@@ -845,15 +845,16 @@ gw.notePopupClick("hh", "accent");
 gw.noteRightClick({ preventDefault: function () {} }, "hh", 3);
 gw.notePopupClick("hh", "off");
 
-var hhBefore = gw.grooveDataFromClickableUI().hh_array;
-check("setup: three hits land on the grid",
-	  hhBefore[0] === constant_ABC_HH_Normal &&
-	  hhBefore[1] === constant_ABC_HH_Open &&
-	  hhBefore[2] === constant_ABC_HH_Accent, true);
-check("setup: the rest is a rest", hhBefore[3], false);
+// the item is the fifth in the menu
+var hhMenu = /id="hhLabelContextMenu"[^>]*>([\s\S]*?)<\/ul>/.exec(indexHTML)[1];
+var hhItems = hhMenu.match(/<li/g).length;
+var ridePosition = hhMenu.split('id="hh_to_ride_menu_item"')[0].match(/<li/g).length;
+check("to ride is the fifth of " + hhItems + " items", ridePosition, 5);
 
-// the teacher's request: label click -> context menu -> convert to ride
+// a mixed measure offers "to ride"
 gw.noteLabelClick({ clientX: 0, clientY: 0, preventDefault: function () {} }, "hh", 1);
+check("menu item reads 'to ride' for a mixed measure",
+	  made.hh_to_ride_menu_item.innerHTML, "to ride");
 gw.noteLabelPopupClick("hh", "all_ride");
 
 var hhAfter = gw.grooveDataFromClickableUI().hh_array;
@@ -862,30 +863,56 @@ check("open hi-hat becomes ride", hhAfter[1], constant_ABC_HH_Ride);
 check("accented hi-hat becomes ride", hhAfter[2], constant_ABC_HH_Ride);
 check("the rest stays a rest", hhAfter[3], false);
 
-// converting twice is a no-op, and other instruments are untouched
-var snareBefore = gw.grooveDataFromClickableUI().snare_array[0];
+// now everything is ride, so the same item offers "to hihat" and converts back
 gw.noteLabelClick({ clientX: 0, clientY: 0, preventDefault: function () {} }, "hh", 1);
+check("menu item reads 'to hihat' when everything is ride",
+	  made.hh_to_ride_menu_item.innerHTML, "to hihat");
 gw.noteLabelPopupClick("hh", "all_ride");
-var hhTwice = gw.grooveDataFromClickableUI().hh_array;
-check("already-ride notes stay ride", hhTwice[0], constant_ABC_HH_Ride);
-check("snare is untouched", gw.grooveDataFromClickableUI().snare_array[0], snareBefore);
 
-// ---------------------------------------------------------------- snare upbeats are ghosts
-section("snare label menu puts ghosts on the upbeats");
+var hhBack = gw.grooveDataFromClickableUI().hh_array;
+check("ride converts back to normal hi-hat", hhBack[0], constant_ABC_HH_Normal);
+check("ride converts back to normal hi-hat (2)", hhBack[1], constant_ABC_HH_Normal);
+check("and the rest is still a rest", hhBack[3], false);
 
-// seed measure 1 with an accent on a downbeat and a normal on an upbeat
-gw.noteRightClick({ preventDefault: function () {} }, "snare", 0);
-gw.notePopupClick("snare", "accent");
-gw.noteRightClick({ preventDefault: function () {} }, "snare", 1);
-gw.notePopupClick("snare", "normal");
+// ---------------------------------------------------------------- snare upbeat ghost notes option
+section("upbeat ghost notes option");
 
+// the option is off by default: an upbeat click places an accent like anywhere else
+gw.noteRightClick({ preventDefault: function () {} }, "snare", 5);
+gw.notePopupClick("snare", "off");
+gw.noteLeftClick({ preventDefault: function () {}, target: { id: "snare5" } }, "snare", 5);
+check("off by default: upbeat click is an accent",
+	  gw.grooveDataFromClickableUI().snare_array[5], constant_ABC_SN_Accent);
+
+// turn the option on from the snare label menu
 gw.noteLabelClick({ clientX: 0, clientY: 0, preventDefault: function () {} }, "snare", 1);
-gw.noteLabelPopupClick("snare", "upbeats");
+gw.noteLabelPopupClick("snare", "upbeat_ghosts");
+check("the menu item shows as checked",
+	  /menuChecked/.test(made.snare_upbeat_ghosts_menu_item.className), true);
 
-var snareUp = gw.grooveDataFromClickableUI().snare_array;
-check("downbeat snare is cleared", snareUp[0], false);
-check("upbeat snare is a ghost", snareUp[1], constant_ABC_SN_Ghost);
-check("the rest of the measure is untouched", snareUp[2], false);
+gw.noteRightClick({ preventDefault: function () {} }, "snare", 5);
+gw.notePopupClick("snare", "off");
+gw.noteLeftClick({ preventDefault: function () {}, target: { id: "snare5" } }, "snare", 5);
+check("on: upbeat click is a ghost",
+	  gw.grooveDataFromClickableUI().snare_array[5], constant_ABC_SN_Ghost);
+
+gw.noteRightClick({ preventDefault: function () {} }, "snare", 4);
+gw.notePopupClick("snare", "off");
+gw.noteLeftClick({ preventDefault: function () {}, target: { id: "snare4" } }, "snare", 4);
+check("on: downbeat click is still an accent",
+	  gw.grooveDataFromClickableUI().snare_array[4], constant_ABC_SN_Accent);
+
+// toggle back off from the menu
+gw.noteLabelClick({ clientX: 0, clientY: 0, preventDefault: function () {} }, "snare", 1);
+gw.noteLabelPopupClick("snare", "upbeat_ghosts");
+check("the menu item shows as unchecked",
+	  /menuChecked/.test(made.snare_upbeat_ghosts_menu_item.className), false);
+
+gw.noteRightClick({ preventDefault: function () {} }, "snare", 5);
+gw.notePopupClick("snare", "off");
+gw.noteLeftClick({ preventDefault: function () {}, target: { id: "snare5" } }, "snare", 5);
+check("off again: upbeat click is an accent",
+	  gw.grooveDataFromClickableUI().snare_array[5], constant_ABC_SN_Accent);
 
 // ---------------------------------------------------------------- huge notation toggle
 section("huge notation toggle");
