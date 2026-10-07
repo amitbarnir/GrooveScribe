@@ -387,3 +387,17 @@ input[type=range]:active::-webkit-slider-thumb {
 		display: none !important;
 	}
 }
+
+/* Huge notation toggle (see myGrooveWriter.toggleHugeNotation): very large sheet music
+   with horizontal scrolling.   The #RightHandContent #svgTarget prefix outranks the 90%
+   width rule in groove_writer_orange.css. */
+#svgTarget.huge-notation {
+	overflow-x: auto;
+}
+#RightHandContent #svgTarget.huge-notation svg {
+	width: 250%;
+	height: auto;
+	margin-left: 0;
+	margin-right: 0;
+	max-width: none;
+}
