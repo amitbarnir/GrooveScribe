@@ -61,7 +61,7 @@ function GrooveWriter() {
 	var class_advancedEditIsOn = false;
 	var class_measure_for_note_label_click = 0;
 	var class_which_index_last_clicked = 0; // which note was last clicked for the context menu
-	var class_snare_upbeat_ghosts = true; // option: clicked snare notes on upbeats become ghosts (on by default)
+	var class_snare_upbeat_ghosts = false; // option: clicked snare notes on upbeats become ghosts
 
 	// local constants
 	var constant_default_tempo = 80;
@@ -4677,8 +4677,8 @@ function GrooveWriter() {
 
 		// the upbeat ghost notes option is a per-user device preference, not part of the
 		// song;  restore it here so it holds across grooves and sessions
-		try { class_snare_upbeat_ghosts = (localStorage.getItem("groovescribe.upbeatSnareGhosts") !== "0"); }
-		catch (e) { class_snare_upbeat_ghosts = true; }
+		try { class_snare_upbeat_ghosts = (localStorage.getItem("groovescribe.upbeatSnareGhosts") === "1"); }
+		catch (e) { class_snare_upbeat_ghosts = false; }
 
 		class_metronome_auto_speed_up_active = !!myGrooveData.autoSpeedUpActive;
 
