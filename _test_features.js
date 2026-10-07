@@ -666,24 +666,24 @@ gw.applyPracticeSettingsFromGrooveData(new gu.grooveDataNew());
 gw.noteRightClick({ preventDefault: function () {} }, "snare", 5);
 gw.notePopupClick("snare", "off");
 gw.noteLeftClick({ preventDefault: function () {}, target: { id: "snare5" } }, "snare", 5);
-check("fresh device: upbeat click is an accent",
-	  gw.grooveDataFromClickableUI().snare_array[5], constant_ABC_SN_Accent);
+check("fresh device: upbeat click is a ghost",
+	  gw.grooveDataFromClickableUI().snare_array[5], constant_ABC_SN_Ghost);
 
-gw.noteLabelPopupClick("snare", "upbeat_ghosts"); // turn it on
-check("toggling on stores the preference on the device",
-	  storage["groovescribe.upbeatSnareGhosts"], "1");
+gw.noteLabelPopupClick("snare", "upbeat_ghosts"); // turn it off
+check("toggling off stores the preference on the device",
+	  storage["groovescribe.upbeatSnareGhosts"], "0");
 
 // a new session restores it: applyPracticeSettingsFromGrooveData runs on every page load
 gw.applyPracticeSettingsFromGrooveData(new gu.grooveDataNew());
 gw.noteRightClick({ preventDefault: function () {} }, "snare", 5);
 gw.notePopupClick("snare", "off");
 gw.noteLeftClick({ preventDefault: function () {}, target: { id: "snare5" } }, "snare", 5);
-check("restored session: upbeat click is a ghost",
-	  gw.grooveDataFromClickableUI().snare_array[5], constant_ABC_SN_Ghost);
+check("restored session: upbeat click is an accent",
+	  gw.grooveDataFromClickableUI().snare_array[5], constant_ABC_SN_Accent);
 
-gw.noteLabelPopupClick("snare", "upbeat_ghosts"); // turn it back off
-check("toggling off stores the preference on the device",
-	  storage["groovescribe.upbeatSnareGhosts"], "0");
+gw.noteLabelPopupClick("snare", "upbeat_ghosts"); // turn it back on
+check("toggling on stores the preference on the device",
+	  storage["groovescribe.upbeatSnareGhosts"], "1");
 
 // and the song URL carries no trace of it
 check("the option is not written to the song URL",
@@ -939,24 +939,17 @@ check("and the rest is still a rest", hhBack[3], false);
 // ---------------------------------------------------------------- snare upbeat ghost notes option
 section("upbeat ghost notes option");
 
-// the option is off by default: an upbeat click places an accent like anywhere else
+// the option is on by default: an upbeat click places a ghost note
 gw.noteRightClick({ preventDefault: function () {} }, "snare", 5);
 gw.notePopupClick("snare", "off");
 gw.noteLeftClick({ preventDefault: function () {}, target: { id: "snare5" } }, "snare", 5);
-check("off by default: upbeat click is an accent",
-	  gw.grooveDataFromClickableUI().snare_array[5], constant_ABC_SN_Accent);
+check("on by default: upbeat click is a ghost",
+	  gw.grooveDataFromClickableUI().snare_array[5], constant_ABC_SN_Ghost);
 
-// turn the option on from the snare label menu
+// the snare label menu shows it as checked
 gw.noteLabelClick({ clientX: 0, clientY: 0, preventDefault: function () {} }, "snare", 1);
-gw.noteLabelPopupClick("snare", "upbeat_ghosts");
 check("the menu item shows as checked",
 	  /menuChecked/.test(made.snare_upbeat_ghosts_menu_item.className), true);
-
-gw.noteRightClick({ preventDefault: function () {} }, "snare", 5);
-gw.notePopupClick("snare", "off");
-gw.noteLeftClick({ preventDefault: function () {}, target: { id: "snare5" } }, "snare", 5);
-check("on: upbeat click is a ghost",
-	  gw.grooveDataFromClickableUI().snare_array[5], constant_ABC_SN_Ghost);
 
 gw.noteRightClick({ preventDefault: function () {} }, "snare", 4);
 gw.notePopupClick("snare", "off");
@@ -964,8 +957,7 @@ gw.noteLeftClick({ preventDefault: function () {}, target: { id: "snare4" } }, "
 check("on: downbeat click is still an accent",
 	  gw.grooveDataFromClickableUI().snare_array[4], constant_ABC_SN_Accent);
 
-// toggle back off from the menu
-gw.noteLabelClick({ clientX: 0, clientY: 0, preventDefault: function () {} }, "snare", 1);
+// toggle it off from the menu
 gw.noteLabelPopupClick("snare", "upbeat_ghosts");
 check("the menu item shows as unchecked",
 	  /menuChecked/.test(made.snare_upbeat_ghosts_menu_item.className), false);
@@ -973,8 +965,12 @@ check("the menu item shows as unchecked",
 gw.noteRightClick({ preventDefault: function () {} }, "snare", 5);
 gw.notePopupClick("snare", "off");
 gw.noteLeftClick({ preventDefault: function () {}, target: { id: "snare5" } }, "snare", 5);
-check("off again: upbeat click is an accent",
+check("off: upbeat click is an accent again",
 	  gw.grooveDataFromClickableUI().snare_array[5], constant_ABC_SN_Accent);
+
+// toggle back on so later tests see the default state
+gw.noteLabelClick({ clientX: 0, clientY: 0, preventDefault: function () {} }, "snare", 1);
+gw.noteLabelPopupClick("snare", "upbeat_ghosts");
 
 print("");
 print(failures === 0 ? "ALL PASS (including wiring)" : failures + " FAILURE(S)");
