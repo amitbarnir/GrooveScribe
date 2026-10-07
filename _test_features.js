@@ -166,10 +166,10 @@ check("interval slider default is step 6", intervalDefault && intervalDefault[1]
 check("  which is one minute", gw.metronomeAutoSpeedupIntervalSecondsFromSliderValue(intervalDefault[1]), 60);
 check("displayed amount text says 10", /metronomeAutoSpeedupTempoIncreaseAmountOutput">10</.test(indexHTML), true);
 check("displayed interval text says 1 min", /metronomeAutoSpeedupTempoIncreaseIntervalOutput">1 min</.test(indexHTML), true);
-check("step mode checkbox exists and is on by default",
-	  /<input type="checkbox" id="metronomeAutoSpeedUpStepMode" checked>/.test(indexHTML), true);
-check("step mode defaults on in a fresh groove",
-	  new gw.myGrooveUtils.grooveDataNew().autoSpeedUpStepMode, true);
+check("step mode checkbox exists and is off by default",
+	  /<input type="checkbox" id="metronomeAutoSpeedUpStepMode"(?![^>]*checked)[^>]*>/.test(indexHTML), true);
+check("step mode defaults off in a fresh groove",
+	  new gw.myGrooveUtils.grooveDataNew().autoSpeedUpStepMode, false);
 
 // ---------------------------------------------------------------- interval slider mapping
 section("auto speed up: interval slider steps in 10s up to a minute, then in minutes");
@@ -709,6 +709,36 @@ for (var iv = 1; iv <= 25; iv++) {
 }
 check("every slider interval survives the URL, seconds included", everyIntervalSurvives, true);
 
+// ---------------------------------------------------------------- step mode is a per-user preference
+section("step up all at once persists per user, not per song");
+
+storage = {}; // a fresh device: nothing stored yet
+check("fresh device: checkbox starts unchecked", made.metronomeAutoSpeedUpStepMode.checked, false);
+made.metronomeAutoSpeedUpStepMode.checked = true;
+gw.saveAutoSpeedUpStepMode();
+check("ticking it stores the preference on the device",
+	  storage["groovescribe.autoSpeedUpStepMode"], "1");
+made.metronomeAutoSpeedUpStepMode.checked = false;
+gw.applyPracticeSettingsFromGrooveData(new gu.grooveDataNew());
+check("a later load restores it checked", made.metronomeAutoSpeedUpStepMode.checked, true);
+made.metronomeAutoSpeedUpStepMode.checked = false;
+gw.saveAutoSpeedUpStepMode();
+check("unticking it stores the preference", storage["groovescribe.autoSpeedUpStepMode"], "0");
+gw.applyPracticeSettingsFromGrooveData(new gu.grooveDataNew());
+check("and a later load restores it unchecked", made.metronomeAutoSpeedUpStepMode.checked, false);
+
+// but a step mode stated explicitly in a shared URL wins for that load
+storage["groovescribe.autoSpeedUpStepMode"] = "1";
+made.metronomeAutoSpeedUpStepMode.checked = true;
+gw.applyPracticeSettingsFromGrooveData(parseQuery("SpeedUp=10,60,0,0"));
+check("explicit URL stepMode=0 wins over the stored preference",
+	  made.metronomeAutoSpeedUpStepMode.checked, false);
+gw.applyPracticeSettingsFromGrooveData(parseQuery("SpeedUp=10,60,0,1"));
+check("explicit URL stepMode=1 is honored",
+	  made.metronomeAutoSpeedUpStepMode.checked, true);
+check("and the stored preference is untouched by the URL",
+	  storage["groovescribe.autoSpeedUpStepMode"], "1");
+
 section("loading a URL arms the options it describes");
 
 // a URL that says "speed this up" is useless if you then have to switch it on by hand
@@ -944,22 +974,6 @@ gw.notePopupClick("snare", "off");
 gw.noteLeftClick({ preventDefault: function () {}, target: { id: "snare5" } }, "snare", 5);
 check("off again: upbeat click is an accent",
 	  gw.grooveDataFromClickableUI().snare_array[5], constant_ABC_SN_Accent);
-
-// ---------------------------------------------------------------- huge notation toggle
-section("huge notation toggle");
-
-// the button is document.write-n into the page at load; simulate that here
-made.largeNotationAnchor = fakeEl("largeNotationAnchor");
-
-check("off by default", gw.isHugeNotation(), false);
-gw.toggleHugeNotation();
-check("toggles on", gw.isHugeNotation(), true);
-check("  and the button lights up",
-	  /buttonSelected/.test(made.largeNotationAnchor.className), true);
-gw.toggleHugeNotation();
-check("toggles back off", gw.isHugeNotation(), false);
-check("  and the button goes dark",
-	  /buttonSelected/.test(made.largeNotationAnchor.className), false);
 
 print("");
 print(failures === 0 ? "ALL PASS (including wiring)" : failures + " FAILURE(S)");

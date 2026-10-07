@@ -200,7 +200,8 @@ function GrooveUtils() {
 		this.autoSpeedUpBpm = 10;            // how much to climb
 		this.autoSpeedUpIntervalSeconds = 60; // how long to take doing it
 		this.autoSpeedUpKeepGoingForever = true;
-		this.autoSpeedUpStepMode = true;     // jump the whole amount at once instead of ramping
+		this.autoSpeedUpStepMode = false;    // jump the whole amount at once instead of ramping
+		this.autoSpeedUpStepModeFromURL = false; // transient: a shared URL stated it explicitly
 		this.debugMode = root.debugMode;
 		this.grooveDBAuthoring = root.grooveDBAuthoring;
 		this.viewMode = root.viewMode;
@@ -1027,8 +1028,10 @@ function GrooveUtils() {
 				myGrooveData.autoSpeedUpIntervalSeconds = speedUpInterval;
 			if (speedUpParts.length > 2)
 				myGrooveData.autoSpeedUpKeepGoingForever = (speedUpParts[2] === "1");
-			if (speedUpParts.length > 3)
+			if (speedUpParts.length > 3) {
 				myGrooveData.autoSpeedUpStepMode = (speedUpParts[3] === "1");
+				myGrooveData.autoSpeedUpStepModeFromURL = true;
+			}
 		}
 
 		myGrooveData.numberOfMeasures = parseInt(root.getQueryVariableFromString("measures", 1, encodedURLData), 10);

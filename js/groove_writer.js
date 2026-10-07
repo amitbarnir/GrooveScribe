@@ -3614,35 +3614,6 @@ function GrooveWriter() {
 		});
 	};
 
-	// Huge notation: blow the sheet music up to 250% width with horizontal scrolling,
-	// for reading across the room.   Pure CSS (see .svgTarget.huge-notation), so it works
-	// on iPhone Safari where the Fullscreen API does not exist.   No re-render needed.
-	var class_huge_notation = false;
-	root.toggleHugeNotation = function () {
-		class_huge_notation = !class_huge_notation;
-
-		var target = document.getElementById("svgTarget");
-		if (target) {
-			if (class_huge_notation)
-				target.classList.add("huge-notation");
-			else
-				target.classList.remove("huge-notation");
-		}
-
-		var anchor = document.getElementById("largeNotationAnchor");
-		if (anchor) {
-			if (class_huge_notation)
-				selectButton(anchor);
-			else
-				unselectButton(anchor);
-		}
-
-		return false;
-	};
-	root.isHugeNotation = function () {
-		return class_huge_notation;
-	};
-
 	root.swapViewEditMode = function(dontUpdateURL) {
 		var view_edit_button = document.getElementById("view-edit-switch");
 
@@ -4693,8 +4664,16 @@ function GrooveWriter() {
 			forever.checked = myGrooveData.autoSpeedUpKeepGoingForever;
 
 		var stepMode = document.getElementById("metronomeAutoSpeedUpStepMode");
-		if (stepMode)
-			stepMode.checked = myGrooveData.autoSpeedUpStepMode;
+		if (stepMode) {
+			// a step mode stated explicitly in a shared URL wins for that load;  otherwise
+			// the user's stored preference applies, defaulting to off
+			if (myGrooveData.autoSpeedUpStepModeFromURL)
+				stepMode.checked = myGrooveData.autoSpeedUpStepMode;
+			else {
+				try { stepMode.checked = (localStorage.getItem("groovescribe.autoSpeedUpStepMode") === "1"); }
+				catch (e) { stepMode.checked = false; }
+			}
+		}
 
 		// the upbeat ghost notes option is a per-user device preference, not part of the
 		// song;  restore it here so it holds across grooves and sessions
@@ -4707,6 +4686,13 @@ function GrooveWriter() {
 			addOrRemoveKeywordFromClassById("metronomeOptionsContextMenuSpeedUp", "menuChecked", class_metronome_auto_speed_up_active);
 			root.metronomeOptionsMenuSetSelectedState();
 		}
+	};
+
+	// the "step up all at once" checkbox is a per-user preference: once the user ticks
+	// (or unticks) it, the choice sticks on the device
+	root.saveAutoSpeedUpStepMode = function () {
+		var stepMode = document.getElementById("metronomeAutoSpeedUpStepMode");
+		try { localStorage.setItem("groovescribe.autoSpeedUpStepMode", stepMode && stepMode.checked ? "1" : "0"); } catch (e) {}
 	};
 
 	root.loadNewGroove = function (encodedURLData) {
