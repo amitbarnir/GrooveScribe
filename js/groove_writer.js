@@ -1638,8 +1638,10 @@ function GrooveWriter() {
 		}
 
 		if (action == "upbeat_ghosts" && instrument == "snare") {
-			// option toggle: clicked snare notes on upbeats become ghost notes
+			// option toggle: clicked snare notes on upbeats become ghost notes.
+			// a per-user preference, kept on the device rather than in the song URL
 			class_snare_upbeat_ghosts = !class_snare_upbeat_ghosts;
+			try { localStorage.setItem("groovescribe.upbeatSnareGhosts", class_snare_upbeat_ghosts ? "1" : "0"); } catch (e) {}
 			addOrRemoveKeywordFromClassById("snare_upbeat_ghosts_menu_item", "menuChecked", class_snare_upbeat_ghosts);
 			class_measure_for_note_label_click = 0; // reset
 			return false;
@@ -2875,7 +2877,6 @@ function GrooveWriter() {
 			myGrooveData.autoSpeedUpKeepGoingForever = document.getElementById("metronomeAutoSpeedUpKeepGoingForever").checked;
 		if (document.getElementById("metronomeAutoSpeedUpStepMode"))
 			myGrooveData.autoSpeedUpStepMode = document.getElementById("metronomeAutoSpeedUpStepMode").checked;
-		myGrooveData.upbeatSnareGhosts = class_snare_upbeat_ghosts;
 
 		for (var i = 0; i < class_number_of_measures; i++) {
 			var total_notes = class_notes_per_measure * class_number_of_measures;
@@ -4695,9 +4696,10 @@ function GrooveWriter() {
 		if (stepMode)
 			stepMode.checked = myGrooveData.autoSpeedUpStepMode;
 
-		// restore the snare upbeat ghost notes option a URL carried;  the menu check mark
-		// itself is refreshed every time the Snare menu opens (see noteLabelClick)
-		class_snare_upbeat_ghosts = !!myGrooveData.upbeatSnareGhosts;
+		// the upbeat ghost notes option is a per-user device preference, not part of the
+		// song;  restore it here so it holds across grooves and sessions
+		try { class_snare_upbeat_ghosts = (localStorage.getItem("groovescribe.upbeatSnareGhosts") === "1"); }
+		catch (e) { class_snare_upbeat_ghosts = false; }
 
 		class_metronome_auto_speed_up_active = !!myGrooveData.autoSpeedUpActive;
 

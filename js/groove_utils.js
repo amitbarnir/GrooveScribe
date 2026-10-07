@@ -201,7 +201,6 @@ function GrooveUtils() {
 		this.autoSpeedUpIntervalSeconds = 60; // how long to take doing it
 		this.autoSpeedUpKeepGoingForever = true;
 		this.autoSpeedUpStepMode = true;     // jump the whole amount at once instead of ramping
-		this.upbeatSnareGhosts = false;    // snare clicks on upbeats create ghost notes
 		this.debugMode = root.debugMode;
 		this.grooveDBAuthoring = root.grooveDBAuthoring;
 		this.viewMode = root.viewMode;
@@ -1013,9 +1012,6 @@ function GrooveUtils() {
 			silencePct = 0;
 		myGrooveData.silentPhrasePercentage = Math.min(silencePct, 90);
 
-		// snare upbeat ghost notes option;  older URLs just leave it at its default (off)
-		myGrooveData.upbeatSnareGhosts = (root.getQueryVariableFromString("UpbeatGhosts", "0", encodedURLData) === "1");
-
 		// packed as amount,intervalSeconds,keepGoingForever,stepMode.   Anything missing or
 		// unparseable falls back to the field's default rather than throwing the lot away.
 		var speedUpString = root.getQueryVariableFromString("SpeedUp", false, encodedURLData);
@@ -1185,10 +1181,6 @@ function GrooveUtils() {
 					   "," + (myGrooveData.autoSpeedUpKeepGoingForever ? 1 : 0) +
 					   "," + (myGrooveData.autoSpeedUpStepMode ? 1 : 0);
 		}
-
-		// snare upbeat ghost notes option;  only written when switched on
-		if (myGrooveData.upbeatSnareGhosts)
-			fullURL += "&UpbeatGhosts=1";
 
 		// notes
 		var total_notes = myGrooveData.notesPerMeasure * myGrooveData.numberOfMeasures;

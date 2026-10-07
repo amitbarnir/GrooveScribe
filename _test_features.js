@@ -660,22 +660,34 @@ check("  and defaults the rest", partial.autoSpeedUpIntervalSeconds + "/" + part
 var junk = parseQuery("SpeedUp=abc,def");
 check("a garbled SpeedUp arms with defaults rather than breaking", junk.autoSpeedUpBpm + "/" + junk.autoSpeedUpIntervalSeconds, "10/60");
 
-// upbeat ghost notes option rides along too
-var ghostsURL = urlFor(function (gd) { gd.upbeatSnareGhosts = true; });
-check("upbeat ghost notes are written to the URL", /[?&]UpbeatGhosts=1(&|$)/.test(ghostsURL), true);
-check("  and read back", parseUrl(ghostsURL).upbeatSnareGhosts, true);
-check("a URL with no UpbeatGhosts reads back as off", parseUrl(plainURL).upbeatSnareGhosts, false);
-check("UpbeatGhosts is not written when off",
-	  /UpbeatGhosts=/.test(urlFor(function (gd) { gd.upbeatSnareGhosts = false; })), false);
-check("the option defaults to off in a fresh groove", new gu.grooveDataNew().upbeatSnareGhosts, false);
+// upbeat ghost notes persist per user (on the device), not per song (in the URL)
+storage = {}; // a fresh device: nothing stored yet
+gw.applyPracticeSettingsFromGrooveData(new gu.grooveDataNew());
+gw.noteRightClick({ preventDefault: function () {} }, "snare", 5);
+gw.notePopupClick("snare", "off");
+gw.noteLeftClick({ preventDefault: function () {}, target: { id: "snare5" } }, "snare", 5);
+check("fresh device: upbeat click is an accent",
+	  gw.grooveDataFromClickableUI().snare_array[5], constant_ABC_SN_Accent);
 
-// and the UI toggle feeds the URL builder
-gw.noteLabelPopupClick("snare", "upbeat_ghosts"); // on
-check("toggling the option on marks it for the URL",
-	  gw.grooveDataFromClickableUI().upbeatSnareGhosts, true);
-gw.noteLabelPopupClick("snare", "upbeat_ghosts"); // off again
-check("toggling the option off unmarks it",
-	  gw.grooveDataFromClickableUI().upbeatSnareGhosts, false);
+gw.noteLabelPopupClick("snare", "upbeat_ghosts"); // turn it on
+check("toggling on stores the preference on the device",
+	  storage["groovescribe.upbeatSnareGhosts"], "1");
+
+// a new session restores it: applyPracticeSettingsFromGrooveData runs on every page load
+gw.applyPracticeSettingsFromGrooveData(new gu.grooveDataNew());
+gw.noteRightClick({ preventDefault: function () {} }, "snare", 5);
+gw.notePopupClick("snare", "off");
+gw.noteLeftClick({ preventDefault: function () {}, target: { id: "snare5" } }, "snare", 5);
+check("restored session: upbeat click is a ghost",
+	  gw.grooveDataFromClickableUI().snare_array[5], constant_ABC_SN_Ghost);
+
+gw.noteLabelPopupClick("snare", "upbeat_ghosts"); // turn it back off
+check("toggling off stores the preference on the device",
+	  storage["groovescribe.upbeatSnareGhosts"], "0");
+
+// and the song URL carries no trace of it
+check("the option is not written to the song URL",
+	  /UpbeatGhosts=/.test(urlFor(function () {})), false);
 
 // both at once, through a full round trip
 var bothURL = urlFor(function (gd) {
