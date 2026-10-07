@@ -660,6 +660,23 @@ check("  and defaults the rest", partial.autoSpeedUpIntervalSeconds + "/" + part
 var junk = parseQuery("SpeedUp=abc,def");
 check("a garbled SpeedUp arms with defaults rather than breaking", junk.autoSpeedUpBpm + "/" + junk.autoSpeedUpIntervalSeconds, "10/60");
 
+// upbeat ghost notes option rides along too
+var ghostsURL = urlFor(function (gd) { gd.upbeatSnareGhosts = true; });
+check("upbeat ghost notes are written to the URL", /[?&]UpbeatGhosts=1(&|$)/.test(ghostsURL), true);
+check("  and read back", parseUrl(ghostsURL).upbeatSnareGhosts, true);
+check("a URL with no UpbeatGhosts reads back as off", parseUrl(plainURL).upbeatSnareGhosts, false);
+check("UpbeatGhosts is not written when off",
+	  /UpbeatGhosts=/.test(urlFor(function (gd) { gd.upbeatSnareGhosts = false; })), false);
+check("the option defaults to off in a fresh groove", new gu.grooveDataNew().upbeatSnareGhosts, false);
+
+// and the UI toggle feeds the URL builder
+gw.noteLabelPopupClick("snare", "upbeat_ghosts"); // on
+check("toggling the option on marks it for the URL",
+	  gw.grooveDataFromClickableUI().upbeatSnareGhosts, true);
+gw.noteLabelPopupClick("snare", "upbeat_ghosts"); // off again
+check("toggling the option off unmarks it",
+	  gw.grooveDataFromClickableUI().upbeatSnareGhosts, false);
+
 // both at once, through a full round trip
 var bothURL = urlFor(function (gd) {
 	gd.silentPhrasePercentage = 25;

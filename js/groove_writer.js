@@ -1552,7 +1552,7 @@ function GrooveWriter() {
 			case "hh":
 				contextMenu = document.getElementById("hhLabelContextMenu");
 				// the ride conversion item toggles: "to ride", unless every hi-hat hit
-				// in the measure is already ride, in which case it offers "to hihat"
+				// in the measure is already ride, in which case it offers "to hi-hat"
 				var rideItem = document.getElementById("hh_to_ride_menu_item");
 				if (rideItem) {
 					var rideStart = class_notes_per_measure * (measure - 1);
@@ -1578,6 +1578,7 @@ function GrooveWriter() {
 				break;
 			case "snare":
 				contextMenu = document.getElementById("snareLabelContextMenu");
+				addOrRemoveKeywordFromClassById("snare_upbeat_ghosts_menu_item", "menuChecked", class_snare_upbeat_ghosts);
 				break;
 			case "kick":
 				contextMenu = document.getElementById("kickLabelContextMenu");
@@ -2874,6 +2875,7 @@ function GrooveWriter() {
 			myGrooveData.autoSpeedUpKeepGoingForever = document.getElementById("metronomeAutoSpeedUpKeepGoingForever").checked;
 		if (document.getElementById("metronomeAutoSpeedUpStepMode"))
 			myGrooveData.autoSpeedUpStepMode = document.getElementById("metronomeAutoSpeedUpStepMode").checked;
+		myGrooveData.upbeatSnareGhosts = class_snare_upbeat_ghosts;
 
 		for (var i = 0; i < class_number_of_measures; i++) {
 			var total_notes = class_notes_per_measure * class_number_of_measures;
@@ -4692,6 +4694,10 @@ function GrooveWriter() {
 		var stepMode = document.getElementById("metronomeAutoSpeedUpStepMode");
 		if (stepMode)
 			stepMode.checked = myGrooveData.autoSpeedUpStepMode;
+
+		// restore the snare upbeat ghost notes option a URL carried;  the menu check mark
+		// itself is refreshed every time the Snare menu opens (see noteLabelClick)
+		class_snare_upbeat_ghosts = !!myGrooveData.upbeatSnareGhosts;
 
 		class_metronome_auto_speed_up_active = !!myGrooveData.autoSpeedUpActive;
 
