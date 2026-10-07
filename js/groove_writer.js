@@ -1666,6 +1666,9 @@ function GrooveWriter() {
 			} else if (instrument == "snare" && action == "all_on_ghost") {
 				set_snare_state(i, "ghost", i == startIndex);
 
+			} else if (instrument == "snare" && action == "upbeats") {
+				set_snare_state(i, (i % 2 === 0 ? "off" : "ghost"), i == (startIndex + 1));
+
 			} else if (instrument == "kick" && action == "hh_foot_nums_on") {
 				var num_notes_per_count = class_time_division / class_note_value_per_measure
 				var cur_state = get_kick_state(i, "ABC");
@@ -3565,6 +3568,35 @@ function GrooveWriter() {
 		});
 	};
 
+	// Huge notation: blow the sheet music up to 250% width with horizontal scrolling,
+	// for reading across the room.   Pure CSS (see .svgTarget.huge-notation), so it works
+	// on iPhone Safari where the Fullscreen API does not exist.   No re-render needed.
+	var class_huge_notation = false;
+	root.toggleHugeNotation = function () {
+		class_huge_notation = !class_huge_notation;
+
+		var target = document.getElementById("svgTarget");
+		if (target) {
+			if (class_huge_notation)
+				target.classList.add("huge-notation");
+			else
+				target.classList.remove("huge-notation");
+		}
+
+		var anchor = document.getElementById("largeNotationAnchor");
+		if (anchor) {
+			if (class_huge_notation)
+				selectButton(anchor);
+			else
+				unselectButton(anchor);
+		}
+
+		return false;
+	};
+	root.isHugeNotation = function () {
+		return class_huge_notation;
+	};
+
 	root.swapViewEditMode = function(dontUpdateURL) {
 		var view_edit_button = document.getElementById("view-edit-switch");
 
@@ -3852,26 +3884,10 @@ function GrooveWriter() {
 		return class_metronome_silent_phrases_active;
 	};
 
-	// Silence is a property of the whole phrase, not of individual measures, and the percentage
-	// is a ratio rather than a per-measure coin flip:  at 30% the groove drops out 3 times in
-	// every 10 repetitions, whether the groove is one measure long or four.
-	//
-	// Getting the ratio right is not enough on its own - the spacing is what you actually feel.
-	// Drawing the silent repetitions at random gives the right count but says nothing about
-	// where they land, and it clumps badly:  measured over 2000 repetitions at 25% a uniform
-	// shuffle produced runs of 15 playing and 4 silent.   Dealing from a shuffled bag of 20 was
-	// no better once you counted across the bag boundaries.
-	//
-	// So instead of choosing repetitions, we accumulate credit.   Every repetition adds the
-	// percentage to a running total, and when the total crosses a threshold the groove drops
-	// out and we subtract one.   That is even spacing by construction - at 25% the credit
-	// crosses on roughly every fourth repetition - and it self corrects, so the ratio stays
-	// exact over the long run with no cycle boundaries to clump at.
-	//
-	// The threshold is jittered by +/- 30% so the gap wanders a little and you cannot simply
-	// count your way to the next one.   Measured worst case at 25%: 6 playing, 2 silent.
-	var constant_SILENT_PHRASE_THRESHOLD_JITTER = 0.6;
-	var class_silent_phrase_credit = 0;
+	// Silence is a property of the whole phrase, not of individual measures.   Every phrase
+	// after the first is an independent coin flip weighted by the percentage - grouped
+	// silences (or long audible stretches) are fine, that is what the percentage means.
+	// The first phrase is never silent: you need to hear the groove before you can hold it.
 	var class_this_phrase_is_silent = false;
 
 	root.isThisPhraseSilent = function () {
@@ -3881,11 +3897,13 @@ function GrooveWriter() {
 	// Called when playback starts, and whenever the setting changes.   The first phrase is
 	// never silent - you need to hear the groove before you can hold it.
 	root.resetSilentPhraseCycle = function () {
-		class_silent_phrase_credit = 0;
 		class_this_phrase_is_silent = false;
 	};
 
 	// Advance to the next repetition and report whether it is a silent one.
+	// Deliberately simple: every phrase after the first is an independent coin flip
+	// weighted by the percentage.   Grouped silences (or long audible stretches) are
+	// fine - that is what the percentage means.
 	root.rollNextSilentPhrase = function () {
 		var pct = root.getSilentPhrasePercentage();
 
@@ -3894,16 +3912,7 @@ function GrooveWriter() {
 			return false;
 		}
 
-		class_silent_phrase_credit += pct / 100;
-
-		var threshold = 1 + (Math.random() - 0.5) * constant_SILENT_PHRASE_THRESHOLD_JITTER;
-
-		if (class_silent_phrase_credit >= threshold) {
-			class_silent_phrase_credit -= 1; // keeps the long run ratio honest
-			class_this_phrase_is_silent = true;
-		} else {
-			class_this_phrase_is_silent = false;
-		}
+		class_this_phrase_is_silent = (Math.random() * 100 < pct);
 
 		return class_this_phrase_is_silent;
 	};

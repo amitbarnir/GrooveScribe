@@ -583,6 +583,14 @@
 		margin-left: auto;
 		margin-right: auto;
 	}
+	.svgTarget.huge-notation {
+		overflow-x: auto;
+	}
+	.svgTarget.huge-notation svg {
+		width: 250%;
+		height: auto;
+		max-width: none;
+	}
 	#sheetMusicTextFields {
 		border-top: 1px solid #999;
 		padding: 8px 0px;

@@ -6,10 +6,21 @@
 
 /*global window, document, localStorage */
 
-var GS_APP_VERSION = "1.05";
+var GS_APP_VERSION = "1.06";
 
 // Newest first.   "changes" is a plain list of strings.
 var GS_CHANGELOG = [
+	{
+		version: "1.06",
+		date: "2026-10-07",
+		changes: [
+			"Hi-hat label menu: new \"convert Hi-hats to Ride\" turns every hi-hat hit in the measure into a ride hit.",
+			"Snare label menu: new \"upbeats\" puts ghost notes on the upbeats.",
+			"New \"Huge notation\" button blows the sheet music up for reading across the room.",
+			"Auto speed up: \"Step up all at once\" is now on by default.",
+			"Silent phrases: now default to 25%, and the logic is a simple per-phrase coin flip - grouped silences are fine."
+		]
+	},
 	{
 		version: "1.05",
 		date: "2026-09-01",

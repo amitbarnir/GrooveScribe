@@ -93,6 +93,7 @@
 					<script>
 						if (!myGrooveWriter.myGrooveUtils.grooveDBAuthoring) {
 							document.write('<span class="left-button" onclick="myGrooveWriter.swapViewEditMode();"><span class="left-button-content"><span id="view-edit-switch" >Switch to EDIT mode</span></span></span>');
+							document.write('<span class="left-button" id="largeNotationAnchor" onclick="myGrooveWriter.toggleHugeNotation();"><span class="left-button-content">Huge notation</span></span>');
 						}
 					</script>
 
@@ -379,6 +380,7 @@
 				<li onclick='myGrooveWriter.noteLabelPopupClick("snare", "all_on");'>all <b>Accented</b></li>
 				<li onclick='myGrooveWriter.noteLabelPopupClick("snare", "all_on_normal");'>all <b>Normal</b></li>
 				<li onclick='myGrooveWriter.noteLabelPopupClick("snare", "all_on_ghost");'>all <b>Ghosts</b></li>
+				<li onclick='myGrooveWriter.noteLabelPopupClick("snare", "upbeats");'>upbeats</li>
 				<li id='mute_snare_menu_item' onclick='myGrooveWriter.noteLabelPopupClick("snare", "mute");'>mute snare sound</li>
 				<li onclick='myGrooveWriter.noteLabelPopupClick("snare", "cancel");'>cancel</li>
 			</ul>
@@ -492,7 +494,7 @@
 				<input type="checkbox" checked id="metronomeAutoSpeedUpKeepGoingForever"><label for="metronomeAutoSpeedUpKeepGoingForever">Keep increasing after the first interval</label>
 			</div>
 			<div id="metronomeAutoSpeedupConfigurationKeepIncreasing">
-				<input type="checkbox" id="metronomeAutoSpeedUpStepMode"><label for="metronomeAutoSpeedUpStepMode" title="Hold the tempo steady for the whole interval, then jump the full amount at once, instead of creeping up gradually">Step up all at once</label>
+				<input type="checkbox" id="metronomeAutoSpeedUpStepMode" checked><label for="metronomeAutoSpeedUpStepMode" title="Hold the tempo steady for the whole interval, then jump the full amount at once, instead of creeping up gradually">Step up all at once</label>
 			</div>
 			<div id="metronomeAutoSpeedupConfigurationSliders">
 				<div id="metronomeAutoSpeedupConfigurationAmountLable">Amount in BPM</div>
@@ -511,11 +513,11 @@
 		<!-- silent measure practice mode.   Its own option so it can be used without auto speed up -->
 		<div id="silentPhrasesConfiguration">
 			<div id="silentPhrasesOutputText">
-				Silent <span id="silentPhrasesPercentageOutput">30</span>% of the time
+				Silent <span id="silentPhrasesPercentageOutput">25</span>% of the time
 			</div>
 			<div id="silentPhrasesConfigurationSliders">
-				<div id="silentPhrasesConfigurationLable" title="Mutes the whole groove - drums and metronome both - so you have to hold the time yourself. At 30% it drops out 3 times in every 10 repetitions, in a different order each cycle. The first repetition is never silent.">How often the groove drops out</div>
-				<input type=range min=5 max=90 value=30 step="5" class="metronomeAutoSpeedUpRange" id="silentPhrasesPercentage" oninput="myGrooveWriter.updateRangeLabel(event, 'silentPhrasesPercentageOutput');">
+				<div id="silentPhrasesConfigurationLable" title="Mutes the whole groove - drums and metronome both - so you have to hold the time yourself. Each repetition after the first is silent with the given probability, independently. The first repetition is never silent.">How often the groove drops out</div>
+				<input type=range min=5 max=90 value=25 step="5" class="metronomeAutoSpeedUpRange" id="silentPhrasesPercentage" oninput="myGrooveWriter.updateRangeLabel(event, 'silentPhrasesPercentageOutput');">
 			</div>
 			<div id="silentPhrasesCloseButtonDiv">
 				<button id="silentPhrasesConfigurationCloseButton" onclick="myGrooveWriter.close_SilentPhrasesConfiguration('ok');">Done</button>

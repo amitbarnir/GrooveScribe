@@ -166,8 +166,8 @@ check("interval slider default is step 6", intervalDefault && intervalDefault[1]
 check("  which is one minute", gw.metronomeAutoSpeedupIntervalSecondsFromSliderValue(intervalDefault[1]), 60);
 check("displayed amount text says 10", /metronomeAutoSpeedupTempoIncreaseAmountOutput">10</.test(indexHTML), true);
 check("displayed interval text says 1 min", /metronomeAutoSpeedupTempoIncreaseIntervalOutput">1 min</.test(indexHTML), true);
-check("step mode checkbox exists and is off by default",
-	  /<input type="checkbox" id="metronomeAutoSpeedUpStepMode">/.test(indexHTML), true);
+check("step mode checkbox exists and is on by default",
+	  /<input type="checkbox" id="metronomeAutoSpeedUpStepMode" checked>/.test(indexHTML), true);
 
 // ---------------------------------------------------------------- interval slider mapping
 section("auto speed up: interval slider steps in 10s up to a minute, then in minutes");
@@ -349,7 +349,15 @@ check("a flam's grace note does not leak into a silent phrase",
 	  ft.events.filter(function (e) { return e.kind === "on"; }).length, 0);
 
 // ---------------------------------------------------------------- the ratio
-section("silence honours the ratio, not a per measure coin flip");
+section("silence is a simple per-phrase coin flip");
+
+// deterministic dice so the coin flip tests are exact, not statistical
+var realRandom = Math.random;
+function loadDice(values) {
+	var i = 0;
+	Math.random = function () { return values[i++ % values.length]; };
+}
+function restoreDice() { Math.random = realRandom; }
 
 function drawSequence(pct, reps) {
 	gw.setSilentPhrasesActive(true);
@@ -370,72 +378,29 @@ function silentShare(seq) {
 	return countSilent(seq) / seq.length * 100;
 }
 
-// 30% must mean the groove drops out 3 times in every 10 repetitions.   The credit
-// accumulator self corrects, so the ratio is exact over a long run rather than forced into
-// fixed windows - check it where it matters, over hundreds of repetitions.
-check("30% is 3 in every 10 over the long run",
-	  Math.abs(silentShare(drawSequence(30, 2001).slice(1)) - 30) < 1, true);
+// at 50% a die under 0.50 silences, 0.50 and up plays - and every phrase draws fresh
+loadDice([0.0, 0.99, 0.25, 0.75]);
+check("each phrase draws independently",
+	  drawSequence(50, 5).slice(1).join(","), "true,false,true,false");
+restoreDice();
 
-var everySliderPosition = true;
-var worstDrift = 0;
-for (var pctUnderTest = 5; pctUnderTest <= 90; pctUnderTest += 5) {
-	var drift = Math.abs(silentShare(drawSequence(pctUnderTest, 2001).slice(1)) - pctUnderTest);
-	if (drift > worstDrift) worstDrift = drift;
-	if (drift >= 1) everySliderPosition = false;
-}
-check("every slider position lands within 1% of what it says", everySliderPosition, true);
-check("  worst drift across the whole slider is under half a percent", worstDrift < 0.5, true);
+// grouped silences are allowed - that is what the percentage means
+loadDice([0.1, 0.2, 0.3, 0.4]);
+check("back to back silences can happen",
+	  drawSequence(50, 5).slice(1).join(","), "true,true,true,true");
+restoreDice();
 
-// it also has to be right locally, not just on average - a setting that is correct over
-// 2000 repetitions but wanders for the first 40 is no use to anyone
-var locallyRight = true;
-for (var t2 = 0; t2 < 30; t2++) {
-	var short = drawSequence(25, 41).slice(1);   // 40 repetitions at 25% -> about 10 silent
-	if (countSilent(short) < 8 || countSilent(short) > 12) locallyRight = false;
-}
-check("25% gives about 10 silent in any 40 repetitions", locallyRight, true);
+// the ratio lands where it says: one draw in four under 0.25 is exactly 25%
+loadDice([0.0, 0.5, 0.6, 0.7]);
+check("25% silences exactly one phrase in four",
+	  silentShare(drawSequence(25, 1001).slice(1)), 25);
+restoreDice();
 
 // the placement still has to move around, or you would just learn the pattern
 var seen = {};
 for (var t3 = 0; t3 < 40; t3++)
 	seen[drawSequence(50, 21).slice(1).join("")] = true;
 check("the gaps do not fall in the same place every time", Object.keys(seen).length > 5, true);
-
-// ---------------------------------------------------------------- spacing
-// This is the property that took three attempts to get right, so it is worth pinning hard.
-// Getting the count right is not enough - the spacing is what you feel.   A uniform shuffle
-// hit runs of 15 playing and 4 silent at 25%, which is what made it unusable.   The credit
-// accumulator spaces them by construction.   If these ceilings regress, so does the feature.
-section("silences stay spread out, no long stretches either way");
-
-function longestRun(seq, wanted) {
-	var best = 0, cur = 0;
-	seq.forEach(function (s) {
-		if (s === wanted) { cur++; if (cur > best) best = cur; } else { cur = 0; }
-	});
-	return best;
-}
-
-// measured worst cases over 40000 repetitions were: 25% -> 6 and 2, 30% -> 4 and 2,
-// 50% -> 2 and 2.   The ceilings below leave headroom for the jitter without leaving room
-// for the clumping to come back.
-[[25, 9, 4], [30, 7, 4], [50, 4, 4], [10, 20, 3]].forEach(function (limits) {
-	var pct = limits[0];
-	var worstAudible = 0, worstSilent = 0;
-	for (var attempt = 0; attempt < 10; attempt++) {
-		var seq = drawSequence(pct, 501).slice(1);
-		worstAudible = Math.max(worstAudible, longestRun(seq, false));
-		worstSilent = Math.max(worstSilent, longestRun(seq, true));
-	}
-	check(pct + "%: no marathon of playing (saw " + worstAudible + ")", worstAudible <= limits[1], true);
-	check(pct + "%: no marathon of silence (saw " + worstSilent + ")", worstSilent <= limits[2], true);
-});
-
-// the pathological case the shuffle hit: a stretch so long the setting looks switched off
-var longestGapAt25 = 0;
-for (var t5 = 0; t5 < 10; t5++)
-	longestGapAt25 = Math.max(longestGapAt25, longestRun(drawSequence(25, 501).slice(1), false));
-check("25% never goes 13 repetitions without a gap", longestGapAt25 < 13, true);
 
 // the thing Amit actually asked for
 section("the first phrase is never silent");
@@ -847,6 +812,9 @@ gw.setSilentPhrasesActive(true);
 made.silentPhrasesPercentage.value = "30";
 gw.resetSilentPhraseCycle();          // what pressing play does
 
+// deterministic dice: exactly 6 of the 20 draws land under 0.30
+loadDice([0.05, 0.5, 0.1, 0.5, 0.15, 0.5, 0.2, 0.5, 0.25, 0.5,
+		  0.29, 0.5, 0.6, 0.7, 0.8, 0.9, 0.55, 0.65, 0.75, 0.85]);
 var heard = [];
 for (var repN = 0; repN < 21; repN++) {
 	if (repN > 0) gw.rollNextSilentPhrase();   // what the loop boundary does
@@ -854,14 +822,13 @@ for (var repN = 0; repN < 21; repN++) {
 	try { gw.MIDISaveAs(); } catch (e) {}
 	heard.push(gw.myGrooveUtils.phraseIsSilent === true ? "." : "#");
 }
+restoreDice();
 var timeline = heard.join("");
 print("        " + timeline + "   (# audible, . silent)");
 var silentInTwenty = timeline.slice(1).split(".").length - 1;
 check("the opening repetition plays", timeline.charAt(0), "#");
-// 30% of 20 is 6.   The accumulator self corrects rather than forcing a fixed count into
-// each window, so allow one either side - over a long run it converges exactly (tested above).
-check("about 6 of the following 20 are silent (saw " + silentInTwenty + ")",
-	  silentInTwenty >= 5 && silentInTwenty <= 7, true);
+check("6 of the following 20 are silent (saw " + silentInTwenty + ")",
+	  silentInTwenty, 6);
 check("every entry is a clean yes or no", /^[#.]+$/.test(timeline), true);
 gw.setSilentPhrasesActive(false);
 
@@ -902,6 +869,39 @@ gw.noteLabelPopupClick("hh", "all_ride");
 var hhTwice = gw.grooveDataFromClickableUI().hh_array;
 check("already-ride notes stay ride", hhTwice[0], constant_ABC_HH_Ride);
 check("snare is untouched", gw.grooveDataFromClickableUI().snare_array[0], snareBefore);
+
+// ---------------------------------------------------------------- snare upbeats are ghosts
+section("snare label menu puts ghosts on the upbeats");
+
+// seed measure 1 with an accent on a downbeat and a normal on an upbeat
+gw.noteRightClick({ preventDefault: function () {} }, "snare", 0);
+gw.notePopupClick("snare", "accent");
+gw.noteRightClick({ preventDefault: function () {} }, "snare", 1);
+gw.notePopupClick("snare", "normal");
+
+gw.noteLabelClick({ clientX: 0, clientY: 0, preventDefault: function () {} }, "snare", 1);
+gw.noteLabelPopupClick("snare", "upbeats");
+
+var snareUp = gw.grooveDataFromClickableUI().snare_array;
+check("downbeat snare is cleared", snareUp[0], false);
+check("upbeat snare is a ghost", snareUp[1], constant_ABC_SN_Ghost);
+check("the rest of the measure is untouched", snareUp[2], false);
+
+// ---------------------------------------------------------------- huge notation toggle
+section("huge notation toggle");
+
+// the button is document.write-n into the page at load; simulate that here
+made.largeNotationAnchor = fakeEl("largeNotationAnchor");
+
+check("off by default", gw.isHugeNotation(), false);
+gw.toggleHugeNotation();
+check("toggles on", gw.isHugeNotation(), true);
+check("  and the button lights up",
+	  /buttonSelected/.test(made.largeNotationAnchor.className), true);
+gw.toggleHugeNotation();
+check("toggles back off", gw.isHugeNotation(), false);
+check("  and the button goes dark",
+	  /buttonSelected/.test(made.largeNotationAnchor.className), false);
 
 print("");
 print(failures === 0 ? "ALL PASS (including wiring)" : failures + " FAILURE(S)");
