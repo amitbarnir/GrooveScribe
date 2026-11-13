@@ -10,6 +10,7 @@ assert.equal(new Set(DEFAULT_SEED.map(e => e.path.join('/'))).size, 312);
 for (let p=1;p<=15;p++) assert.equal(DEFAULT_SEED.filter(e=>e.path[0]===`Page ${p}`).length, counts[p-1]);
 for (const entry of DEFAULT_SEED) {
  const q=new URLSearchParams(entry.query), page=+entry.path[0].split(' ')[1];
+ assert.equal(q.get('Tempo'), '60');
  assert.equal(q.get('TimeSig'), [8,12,13].includes(page)?'2/4':'4/4');
  assert.equal(+q.get('Measures'),page===3?2:1);
  for (const instrument of ['H','S','K']) {
@@ -51,3 +52,9 @@ assert.equal(page12['Beat 3'],'?rename');
 assert.equal(Object.keys(page12['Group 2']).length,16);
 assert.equal(Object.keys(b.tree['Mini Monster']['Page 13']).length,4);
 console.log('PASS: full startup/reload preserves nested groups, custom labels, conflicting saves and legacy typo values.');
+
+const tempoUpdated=DEFAULT_SEED.find(e=>e.previousPreviewQuery);
+b=backend({'Mini Monster':{[tempoUpdated.path[0]]:{[tempoUpdated.path[1]]:tempoUpdated.previousPreviewQuery}}});
+new GrooveLibrary(b).seedMissing();
+assert.equal(new URLSearchParams(b.tree['Mini Monster'][tempoUpdated.path[0]][tempoUpdated.path[1]]).get('Tempo'),'60');
+console.log('PASS: all 312 exercises use 60 BPM; earlier preview defaults migrate to 60 BPM.');

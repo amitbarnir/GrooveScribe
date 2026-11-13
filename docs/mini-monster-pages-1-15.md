@@ -32,7 +32,7 @@ Pages 12 and 13 restart exercise numbering. Their folders contain **Group 1**, *
 - Page 3 retains both measures, rather than splitting each combination into unrelated entries.
 - Page 8's existing 4/4 adaptations were replaced with the printed 2/4 exercises.
 - Page 6 beats 1, 6 and 7 had incorrect snare/bass rhythms and were corrected.
-- Existing saved default tempos are retained; new exercises default to 60 BPM. Tempo is a practice setting, not a marking transcribed from the book.
+- All 312 exercises default to 60 BPM, as requested. Tempo is a practice setting, not a marking transcribed from the book. Unmodified defaults from the earlier preview are also upgraded to 60 BPM.
 
 ## Existing browser libraries
 
