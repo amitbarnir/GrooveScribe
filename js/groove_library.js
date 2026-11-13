@@ -405,38 +405,27 @@ var GrooveLibrary = (function () {
 	function GrooveLibrary(backend) {
 		this.backend = backend;
 	}
-	// Enforce "Beat <number>" naming under Mini Monster. Renames typos
-	// ("Bat 24" → "Beat 24", "beat 15" → "Beat 15") and deletes non-conforming
-	// entries with no extractable number ("Beat", "Groove Scribe"). On rename
-	// conflict, keeps the properly-named entry and drops the typo.
-	// Idempotent — safe to call every init.
+	// Normalize known legacy beat-label typos only. Preserve custom names,
+	// nested groups and both entries when a canonical name already exists.
 	GrooveLibrary.prototype.cleanupMiniMonster = function () {
 		var tree = this.backend.read();
 		var mm = tree["Mini Monster"];
 		if (!mm || typeof mm !== "object") return;
 		var changed = false;
-		for (var pageKey in mm) {
+		Object.keys(mm).forEach(function (pageKey) {
 			var page = mm[pageKey];
-			if (typeof page !== "object" || page === null) continue;
-			var keys = Object.keys(page);
-			for (var i = 0; i < keys.length; i++) {
-				var oldName = keys[i];
-				if (/^Beat \d+$/.test(oldName)) continue;
-				var m = /(\d+)/.exec(oldName);
-				if (m) {
-					var newName = "Beat " + m[1];
-					if (page[newName] !== undefined) {
-						delete page[oldName];
-					} else {
-						page[newName] = page[oldName];
-						delete page[oldName];
-					}
-				} else {
-					delete page[oldName];
-				}
+			if (!page || typeof page !== "object") return;
+			Object.keys(page).forEach(function (oldName) {
+				if (page[oldName] !== null && typeof page[oldName] !== "string") return;
+				var match = /^(?:beat|bat)\s+(\d+)$/i.exec(oldName);
+				if (!match) return;
+				var newName = "Beat " + match[1];
+				if (newName === oldName || Object.prototype.hasOwnProperty.call(page, newName)) return;
+				page[newName] = page[oldName];
+				delete page[oldName];
 				changed = true;
-			}
-		}
+			});
+		});
 		if (changed) this.backend.write(tree);
 	};
 

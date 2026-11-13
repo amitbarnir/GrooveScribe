@@ -35,3 +35,19 @@ lib.seedMissing();assert.equal(b.writes,1);
 b=backend({'Mini Monster':{'Page 1':'?custom=page','Page 2':{'Beat 1':{Custom:'?custom=folder'}}}});
 new GrooveLibrary(b).seedMissing();assert.equal(b.tree['Mini Monster']['Page 1'],'?custom=page');assert.equal(b.tree['Mini Monster']['Page 2']['Beat 1'].Custom,'?custom=folder');
 console.log('PASS: 312 unique complete exercises; time signatures, measures, empty bass part, migration, custom preservation and idempotence.');
+
+// Exercise the actual startup order across reloads, including legacy cleanup.
+b=backend({'Mini Monster':{'Page 12':{'Group 1':{'Beat 1':'?group-custom'},'My exercise':'?custom-name','Bat 2':'?typo','Beat 2':'?canonical','beat 3':'?rename'}}});
+lib=new GrooveLibrary(b);
+lib.cleanupMiniMonster();lib.seedMissing();
+const afterFirst=JSON.stringify(b.tree), writesAfterFirst=b.writes;
+for(let i=0;i<3;i++){lib.cleanupMiniMonster();lib.seedMissing();}
+assert.equal(JSON.stringify(b.tree),afterFirst);assert.equal(b.writes,writesAfterFirst);
+const page12=b.tree['Mini Monster']['Page 12'];
+assert.equal(page12['Group 1']['Beat 1'],'?group-custom');
+assert.equal(page12['My exercise'],'?custom-name');
+assert.equal(page12['Bat 2'],'?typo');assert.equal(page12['Beat 2'],'?canonical');
+assert.equal(page12['Beat 3'],'?rename');
+assert.equal(Object.keys(page12['Group 2']).length,16);
+assert.equal(Object.keys(b.tree['Mini Monster']['Page 13']).length,4);
+console.log('PASS: full startup/reload preserves nested groups, custom labels, conflicting saves and legacy typo values.');

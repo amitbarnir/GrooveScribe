@@ -36,7 +36,7 @@ Pages 12 and 13 restart exercise numbering. Their folders contain **Group 1**, *
 
 ## Existing browser libraries
 
-Opening Library fills missing and empty slots. An entry matching its exact previously shipped default is upgraded to the corrected transcription. Custom saved queries and user-owned folders are preserved. A customized entry at an existing book location therefore keeps its custom version; a fresh library always receives the verified default. Seeding is idempotent and writes once per update.
+Opening Library fills missing and empty slots. An entry matching its exact previously shipped default is upgraded to the corrected transcription. Custom saved queries and user-owned folders are preserved. A customized entry at an existing book location therefore keeps its custom version; a fresh library always receives the verified default. Seeding is idempotent and writes once per update. Legacy name cleanup only renames recognized beat-label typos when the destination is unused; it preserves nested groups, custom names and conflicting saves. Full startup/reload tests cover cleanup followed by seeding.
 
 ## Validation
 
