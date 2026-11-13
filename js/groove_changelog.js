@@ -6,10 +6,20 @@
 
 /*global window, document, localStorage */
 
-var GS_APP_VERSION = "1.06";
+var GS_APP_VERSION = "1.07";
 
 // Newest first.   "changes" is a plain list of strings.
 var GS_CHANGELOG = [
+	{
+		version: "1.07",
+		date: "2026-11-13",
+		changes: [
+			"Mini Monster: all 312 exercises from printed pages 1–15 are now available under Library → Mini Monster, including 216 added exercises.",
+			"All Mini Monster exercises now default to 60 BPM. Existing transcriptions have been checked and corrected against the book.",
+			"Pages 12–13 use Group folders to match the book's repeated exercise numbers.",
+			"Your custom library saves are preserved, including custom names and nested folders."
+		]
+	},
 	{
 		version: "1.06",
 		date: "2026-10-07",
