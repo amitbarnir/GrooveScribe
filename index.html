@@ -143,20 +143,22 @@
 			<div class="Printable">
 				<!-- rendering area -->
 				<style>
-					#libraryNavigation { display: none; grid-template-columns: 92px minmax(0, 1fr) 92px; align-items: center; gap: 8px; margin: 8px 0 4px; width: 100%; box-sizing: border-box; }
-					#libraryNavigation button { width: 92px; box-sizing: border-box; padding: 9px 5px; cursor: pointer; }
+					/* Overlay the existing sheet-music title margin; keep both buttons
+					   anchored to the notation, independent of groove title length. */
+					#sheetMusicDiv { position: relative; }
+					#libraryNavigation { display: none; position: absolute; z-index: 2; top: 10px; left: 16px; right: 16px; align-items: center; justify-content: space-between; pointer-events: none; }
+					#libraryNavigation button { width: 76px; box-sizing: border-box; padding: 6px 4px; cursor: pointer; pointer-events: auto; font-size: 13px; }
 					#libraryNavigation button:disabled { opacity: .35; cursor: default; }
-					@media (max-width: 400px) { #libraryNavigation { grid-template-columns: 72px minmax(0, 1fr) 72px; gap: 4px; } #libraryNavigation button { width: 72px; padding: 9px 2px; } }
+					@media (max-width: 400px) { #libraryNavigation { left: 5px; right: 5px; top: 6px; } #libraryNavigation button { width: 57px; padding: 5px 1px; font-size: 11px; } }
 					@media print { #libraryNavigation { display: none !important; } }
 				</style>
-				<div id="libraryNavigation" class="nonPrintable" aria-label="Library groove navigation">
-					<button type="button" id="libraryPrevious" onclick="myGrooveWriter.navigateLibrary(-1)"><i class="fa fa-chevron-left"></i> Prev</button>
-					<span aria-hidden="true"></span>
-					<button type="button" id="libraryNext" onclick="myGrooveWriter.navigateLibrary(1)">Next <i class="fa fa-chevron-right"></i></button>
-				</div>
 				<div id="sheetMusicDiv" class="fullWidthEle">
 					<div id="svgTarget" class="svgTarget">
 						<!-- space for the SVG sheet music to display -->
+					</div>
+					<div id="libraryNavigation" class="nonPrintable" aria-label="Library groove navigation">
+						<button type="button" id="libraryPrevious" onclick="myGrooveWriter.navigateLibrary(-1)"><i class="fa fa-chevron-left"></i> Prev</button>
+						<button type="button" id="libraryNext" onclick="myGrooveWriter.navigateLibrary(1)">Next <i class="fa fa-chevron-right"></i></button>
 					</div>
 				</div>
 			</div>
