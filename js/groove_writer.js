@@ -1158,9 +1158,6 @@ function GrooveWriter() {
 		var index = currentLibraryIndex(entries);
 		bar.style.display = index < 0 ? "none" : "grid";
 		if (index < 0) return;
-		var title = document.getElementById("libraryCurrentName");
-		title.textContent = entries[index].name;
-		title.title = entries[index].path.join(" / ");
 		document.getElementById("libraryPrevious").disabled = index === 0;
 		document.getElementById("libraryNext").disabled = index === entries.length - 1;
 	}
