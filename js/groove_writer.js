@@ -1169,7 +1169,10 @@ function GrooveWriter() {
 		var entry = entries[next];
 		class_pending_library_path = entry.path;
 		try { window.sessionStorage.setItem("gscribe_pending_slot", JSON.stringify(entry.path)); } catch (e) {}
-		window.location.href = window.location.protocol + "//" + window.location.host + window.location.pathname + entry.query;
+		// The library path is authoritative: saved query metadata can be stale.
+		var params = new URLSearchParams(entry.query.replace(/^\\?/, ""));
+		params.set("Title", entry.path.join(" "));
+		window.location.href = window.location.protocol + "//" + window.location.host + window.location.pathname + "?" + params.toString();
 	};
 
 	// the user has clicked on the Library menu
