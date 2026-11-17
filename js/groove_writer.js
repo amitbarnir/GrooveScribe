@@ -1125,6 +1125,57 @@ function GrooveWriter() {
 		return class_library;
 	}
 
+	// Browse saved library grooves in the same natural order as the library tree.
+	// Empty placeholders are excluded because they have no groove to play.
+	function libraryNavigationEntries() {
+		var tree = getLibrary().read();
+		var entries = [];
+		function visit(node, path) {
+			if (typeof node === "string") {
+				entries.push({path: path, query: node, name: path[path.length - 1]});
+				return;
+			}
+			if (!node || typeof node !== "object") return;
+			Object.keys(node).sort(function (a, b) {
+				return a.localeCompare(b, undefined, {numeric: true, sensitivity: "base"});
+			}).forEach(function (key) { visit(node[key], path.concat([key])); });
+		}
+		visit(tree, []);
+		return entries;
+	}
+	function currentLibraryIndex(entries) {
+		if (!class_pending_library_path) return -1;
+		var key = JSON.stringify(class_pending_library_path);
+		for (var i = 0; i < entries.length; i++) {
+			if (JSON.stringify(entries[i].path) === key) return i;
+		}
+		return -1;
+	}
+	function refreshLibraryNavigation() {
+		var bar = document.getElementById("libraryNavigation");
+		if (!bar) return;
+		var entries = libraryNavigationEntries();
+		var index = currentLibraryIndex(entries);
+		bar.style.display = index < 0 ? "none" : "grid";
+		if (index < 0) return;
+		var title = document.getElementById("libraryCurrentName");
+		title.textContent = entries[index].name;
+		title.title = entries[index].path.join(" / ");
+		document.getElementById("libraryPrevious").disabled = index === 0;
+		document.getElementById("libraryNext").disabled = index === entries.length - 1;
+	}
+	root.navigateLibrary = function (direction) {
+		var entries = libraryNavigationEntries();
+		var index = currentLibraryIndex(entries);
+		var next = index + direction;
+		if (index < 0 || next < 0 || next >= entries.length) return;
+		var entry = entries[next];
+		class_pending_library_path = entry.path;
+		try { window.sessionStorage.setItem("gscribe_pending_slot", JSON.stringify(entry.path)); } catch (e) {}
+		window.location.href = window.location.protocol + "//" + window.location.host + window.location.pathname + entry.query;
+	};
+	window.addEventListener("load", refreshLibraryNavigation);
+
 	// the user has clicked on the Library menu
 	root.libraryAnchorClick = function (event) {
 		var contextMenu = document.getElementById("libraryWrapper");
