@@ -146,12 +146,12 @@
 					/* Overlay the existing sheet-music title margin; keep both buttons
 					   anchored to the notation, independent of groove title length. */
 					#sheetMusicDiv { position: relative; }
-					#libraryNavigation { display: none; position: absolute; z-index: 2; top: 10px; left: 16px; right: 16px; width: auto; align-items: center; justify-content: space-between; pointer-events: none; }
+					#libraryNavigation { display: none; position: absolute; z-index: 2; top: 10px; left: 16px; right: 16px; width: auto; grid-template-columns: 76px minmax(0, 1fr) 76px; align-items: center; pointer-events: none; }
 					#libraryNavigation button { width: 76px; box-sizing: border-box; padding: 6px 4px; cursor: pointer; pointer-events: auto; font-size: 13px; }
-					#libraryNavigation button:disabled { opacity: .35; cursor: default; }
+					#libraryNext { grid-column: 3; }\n\t\t\t\t\t#libraryNavigation button:disabled { opacity: .35; cursor: default; }
 \t\t\t\t\t#sheetMusicTextFields { visibility: hidden; }
 \t\t\t\t\tbody.groove-ready #sheetMusicTextFields { visibility: visible; }
-					@media (max-width: 400px) { #libraryNavigation { left: 5px; right: 5px; top: 6px; } #libraryNavigation button { width: 57px; padding: 5px 1px; font-size: 11px; } }
+					@media (max-width: 400px) { #libraryNavigation { left: 5px; right: 5px; top: 6px; grid-template-columns: 57px minmax(0, 1fr) 57px; } #libraryNavigation button { width: 57px; padding: 5px 1px; font-size: 11px; } }
 					@media print { #libraryNavigation { display: none !important; } }
 				</style>
 				<div id="sheetMusicDiv" class="fullWidthEle">
