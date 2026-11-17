@@ -1174,7 +1174,6 @@ function GrooveWriter() {
 		try { window.sessionStorage.setItem("gscribe_pending_slot", JSON.stringify(entry.path)); } catch (e) {}
 		window.location.href = window.location.protocol + "//" + window.location.host + window.location.pathname + entry.query;
 	};
-	window.addEventListener("load", refreshLibraryNavigation);
 
 	// the user has clicked on the Library menu
 	root.libraryAnchorClick = function (event) {
@@ -3715,6 +3714,7 @@ function GrooveWriter() {
 		// if we arrived here by clicking a saved library entry, restore the
 		// pending-save slot so the next Save writes back to the same location.
 		restorePendingLibrarySlot();
+		refreshLibraryNavigation();
 
 		// show tom rows by default
 		if (!isTomsVisible())
