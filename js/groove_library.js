@@ -404,7 +404,10 @@ var GrooveLibrary = (function () {
 		{"author":"Cajon Basics","path":["Funk / Rock Lesson 1","Beat 1"],"query":"?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7C----------------%7C&S=%7C-gggOggg-gggOggg%7C&K=%7Co-------o-------%7C&Stickings=%7CRLRLRLRLRLRLRLRL%7C&Title=Funk+%2F+Rock+Lesson+1+-+Beat+1&Author=Heidi+Joubert"},
 		{"author":"Cajon Basics","path":["Funk / Rock Lesson 1","Beat 2"],"query":"?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7C----------------%7C&S=%7C-gggOggg-gggOggg%7C&K=%7Co-o-----o-o-----%7C&Stickings=%7CRLRLRLRLRLRLRLRL%7C&Title=Funk+%2F+Rock+Lesson+1+-+Beat+2&Author=Heidi+Joubert"},
 		{"author":"Cajon Basics","path":["Funk / Rock Lesson 1","Beat 3"],"query":"?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7C----------------%7C&S=%7C-gggOggg-gggOggg%7C&K=%7Co-o-------o-----%7C&Stickings=%7CRLRLRLRLRLRLRLRL%7C&Title=Funk+%2F+Rock+Lesson+1+-+Beat+3&Author=Heidi+Joubert"},
-		{"author":"Cajon Basics","path":["Funk / Rock Lesson 1","Beat 4"],"query":"?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7C----------------%7C&S=%7C-gggOggOgO--Oggg%7C&K=%7Co---------o-----%7C&Stickings=%7CRLRLRLRLRLRLRLRL%7C&Title=Funk+%2F+Rock+Lesson+1+-+Beat+4&Author=Heidi+Joubert"}
+		{"author":"Cajon Basics","path":["Funk / Rock Lesson 1","Beat 4"],"query":"?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7C----------------%7C&S=%7C-gggOggOgO--Oggg%7C&K=%7Co---------o-----%7C&Stickings=%7CRLRLRLRLRLRLRLRL%7C&Title=Funk+%2F+Rock+Lesson+1+-+Beat+4&Author=Heidi+Joubert"},
+		{"author":"Cajon Basics","path":["Funk / Rock Lesson 2","Recap - Lesson 1 Beat 4"],"query":"?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7C----------------%7C&S=%7C-gggOggOgO--Oggg%7C&K=%7Co---------o-----%7C&Stickings=%7CRLRLRLRLRLRLRLRL%7C&Title=Funk+%2F+Rock+Lesson+2+-+Recap&Author=Heidi+Joubert"},
+		{"author":"Cajon Basics","path":["Funk / Rock Lesson 2","Variation 1 - 4a bass (provisional)"],"query":"?TimeSig=4%2F4&Div=16&Tempo=60&Measures=1&H=%7C----------------%7C&S=%7C-gggOggOgO--Ogg-%7C&K=%7Co---------o----o%7C&Stickings=%7CRLRLRLRLRLRLRLRL%7C&Title=Funk+%2F+Rock+Lesson+2+-+Variation+1+(provisional)&Author=Heidi+Joubert"},
+		{"author":"Cajon Basics","path":["Funk / Rock Lesson 2","Variation 2 - pending transcription"],"query":null}
 	];
 
 	function GrooveLibrary(backend) {
