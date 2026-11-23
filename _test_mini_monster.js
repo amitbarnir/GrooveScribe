@@ -5,10 +5,11 @@ vm.createContext(context);
 vm.runInContext(fs.readFileSync('js/groove_library.js', 'utf8'), context);
 const {GrooveLibrary, DEFAULT_SEED} = context.GrooveLibrary;
 const counts = [20,18,10,18,20,18,18,32,18,18,18,36,32,18,18];
-assert.equal(DEFAULT_SEED.length, 312);
-assert.equal(new Set(DEFAULT_SEED.map(e => e.path.join('/'))).size, 312);
-for (let p=1;p<=15;p++) assert.equal(DEFAULT_SEED.filter(e=>e.path[0]===`Page ${p}`).length, counts[p-1]);
-for (const entry of DEFAULT_SEED) {
+assert.equal(DEFAULT_SEED.filter(e => e.author === 'Mini Monster').length, 312);
+assert.equal(DEFAULT_SEED.filter(e => e.author === 'Cajon Basics').length, 4);
+assert.equal(new Set(DEFAULT_SEED.map(e => [e.author].concat(e.path).join('/'))).size, DEFAULT_SEED.length);
+for (let p=1;p<=15;p++) assert.equal(DEFAULT_SEED.filter(e=>e.author==='Mini Monster' && e.path[0]===`Page ${p}`).length, counts[p-1]);
+for (const entry of DEFAULT_SEED.filter(e => e.author === 'Mini Monster')) {
  const q=new URLSearchParams(entry.query), page=+entry.path[0].split(' ')[1];
  assert.equal(q.get('Tempo'), '60');
  assert.equal(q.get('TimeSig'), [8,12,13].includes(page)?'2/4':'4/4');
@@ -58,3 +59,13 @@ b=backend({'Mini Monster':{[tempoUpdated.path[0]]:{[tempoUpdated.path[1]]:tempoU
 new GrooveLibrary(b).seedMissing();
 assert.equal(new URLSearchParams(b.tree['Mini Monster'][tempoUpdated.path[0]][tempoUpdated.path[1]]).get('Tempo'),'60');
 console.log('PASS: all 312 exercises use 60 BPM; earlier preview defaults migrate to 60 BPM.');
+
+for (const entry of DEFAULT_SEED.filter(e => e.author === 'Cajon Basics')) {
+ const q = new URLSearchParams(entry.query);
+ assert.equal(entry.path[0], 'Funk / Rock Lesson 1');
+ assert.equal(q.get('Tempo'), '60');
+ assert.equal(q.get('Author'), 'Heidi Joubert');
+ assert.equal(q.get('H'), '|----------------|');
+ for (const part of ['S', 'K']) assert.equal(q.get(part).length, 18);
+}
+console.log('PASS: Cajon Basics four grooves at 60 BPM.');
